@@ -11,10 +11,23 @@ qt_add_executable(appMusicPlayer
     main.cpp
 )
 
-qt_add_qml_module(appMusicPlayer
+qt_add_qml_module(
+    appMusicPlayer
     URI MusicPlayer
     VERSION 1.0
-    QML_FILES main.qml 
+    QML_FILES
+        main.qml
+    RESOURCES
+        Resources/title/mini.png
+        Resources/title/close.png
+)
+qt_add_resources(appMusicPlayer resources
+    PREFIX "/img"
+    FILES
+        Resources/title/mini.png
+        Resources/title/close.png
+        Resources/title/logo.png
+        Resources/title/search.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

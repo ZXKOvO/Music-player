@@ -1,8 +1,14 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+//#include <QFile>
+//#include <QDebug>
+
+
 
 int main(int argc, char *argv[])
 {
+//    qDebug() << QFile::exists(":/img/Resources/title/mini.png");
+//    qDebug() << QFile::exists(":/img/Resources/title/close.png");
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
