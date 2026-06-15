@@ -11,7 +11,6 @@ size_t RingBuffer::write(const uint8_t *data, size_t size) {
     std::unique_lock lock(mutex_);
     size_t written = 0;
     while (written < size) {
-        // 等待缓冲区有空间，或收到 EOF 信号
         notFull_.wait(lock, [&] { return count_ < capacity_ || eof_; });
         if (eof_) return written;
 
@@ -33,33 +32,23 @@ size_t RingBuffer::write(const uint8_t *data, size_t size) {
     return written;
 }
 
-// 消费者读取：有数据时立即返回部分结果，无数据时阻塞等待，返回实际读取字节数
+// 非阻塞读取，不足部分由调用者补静音
 size_t RingBuffer::read(uint8_t *data, size_t size) {
-    std::unique_lock lock(mutex_);
-    size_t bytesRead = 0;
-    while (bytesRead < size) {
-        if (count_ == 0) {
-            if (eof_) break;                    // EOF 且无数据，直接返回
-            if (bytesRead > 0) break;           // 已读到部分数据，不再阻塞等待
-            notEmpty_.wait(lock, [&] { return count_ > 0 || eof_; });
-            if (count_ == 0 && eof_) break;
-        }
+    std::lock_guard lock(mutex_);
+    size_t chunk = std::min(count_, size);
 
-        size_t chunk = std::min(count_, size - bytesRead);
-
-        // 分两段拷贝：尾部 → 头部（处理环形回绕）
-        size_t first = std::min(chunk, capacity_ - head_);
-        std::memcpy(data + bytesRead, buf_.data() + head_, first);
-        if (first < chunk) {
-            std::memcpy(data + bytesRead + first, buf_.data(), chunk - first);
-        }
-
-        head_ = (head_ + chunk) % capacity_;
-        count_ -= chunk;
-        bytesRead += chunk;
-        notFull_.notify_one();
+    // 分两段拷贝：尾部 → 头部（处理环形回绕）
+    size_t first = std::min(chunk, capacity_ - head_);
+    std::memcpy(data, buf_.data() + head_, first);
+    if (first < chunk) {
+        std::memcpy(data + first, buf_.data(), chunk - first);
     }
-    return bytesRead;
+
+    head_ = (head_ + chunk) % capacity_;
+    count_ -= chunk;
+    if (chunk > 0)
+        notFull_.notify_one();
+    return chunk;
 }
 
 // 返回当前缓冲区中可读的字节数
@@ -82,11 +71,12 @@ void RingBuffer::clear() {
     notFull_.notify_all();
 }
 
-// 设置 EOF 标志并唤醒所有等待数据的消费者，使其能正常退出
+// 设置 EOF，唤醒所有等待线程
 void RingBuffer::setEof(bool eof) {
     std::lock_guard lock(mutex_);
     eof_ = eof;
-    notEmpty_.notify_all(); // 唤醒可能在等待数据的消费者
+    notEmpty_.notify_all();
+    notFull_.notify_all();
 }
 
 // 查询是否已标记 EOF（解码结束）

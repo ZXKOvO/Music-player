@@ -20,14 +20,27 @@ ApplicationWindow {
         anchors.margins: 20
         spacing: 16
 
-        // 歌曲标题
+        // 歌曲标题 / 提示选歌
         Label {
-            text: player.title || qsTr("No track loaded")
+            text: player.title || ""
             color: "#FFFFFF"
             font.pixelSize: 18
             font.bold: true
             elide: Text.ElideRight
             Layout.fillWidth: true
+            visible: player.title !== ""
+        }
+
+        Label {
+            text: qsTr("Please select a song to play")
+            color: "#AAAAAA"
+            font.pixelSize: 20
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            verticalAlignment: Text.AlignVCenter
+            visible: player.title === ""
         }
 
         // 进度条 + 时间
@@ -42,10 +55,11 @@ ApplicationWindow {
             }
 
             Slider {
+                id: progressSlider
                 Layout.fillWidth: true
                 from: 0
                 to: player.duration || 1
-                value: player.position
+                value: pressed ? value : player.position
                 onMoved: player.seek(value)
             }
 
@@ -78,13 +92,23 @@ ApplicationWindow {
                 onClicked: player.stop()
             }
 
+            // 静音按钮
+            Button {
+                text: player.muted ? qsTr("Unmute") : qsTr("Mute")
+                onClicked: player.toggleMute()
+            }
+
             // 音量
             Slider {
                 width: 100
                 from: 0
                 to: 1
-                value: player.volume
-                onMoved: player.setVolume(value)
+                value: player.muted ? 0 : player.volume
+                onMoved: {
+                    player.setVolume(value)
+                    if (player.muted && value > 0)
+                        player.setMuted(false)
+                }
             }
         }
 

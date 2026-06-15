@@ -14,6 +14,7 @@ class PlayerController : public QObject {
     Q_PROPERTY(double duration READ duration NOTIFY durationChanged)
     Q_PROPERTY(double position READ position NOTIFY positionChanged)
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged)
+    Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorOccurred)
 public:
@@ -28,13 +29,17 @@ public:
     Q_INVOKABLE void stop();
     // 跳转到指定秒数位置
     Q_INVOKABLE void seek(double pos);
+    // 静音切换
+    Q_INVOKABLE void toggleMute();
 
     bool playing() const { return playing_; }
     double duration() const { return duration_; }
     double position() const { return position_; }
     float volume() const;
     // 设置音量 (0.0 ~ 1.0)
-    void setVolume(float vol);
+    Q_INVOKABLE void setVolume(float vol);
+    bool muted() const { return muted_; }
+    Q_INVOKABLE void setMuted(bool muted);
     QString title() const { return title_; }
     QString error() const { return error_; }
 
@@ -43,6 +48,7 @@ signals:
     void durationChanged();
     void positionChanged();
     void volumeChanged();
+    void mutedChanged();
     void titleChanged();
     void errorOccurred(const QString &msg);
     // 当前曲目播放完毕
@@ -51,6 +57,8 @@ signals:
 private slots:
     // 定时更新播放进度
     void onUpdatePosition();
+    // seek 防抖
+    void doSeek();
 
 private:
     // 启动解码线程
@@ -68,9 +76,13 @@ private:
     std::atomic<bool> decoding_{false};
 
     QTimer posTimer_;          // 进度轮询定时器
+    QTimer seekTimer_;          // seek 防抖
+    double pendingSeekPos_ = -1; // 待 seek 位置（秒）
     double duration_  = 0.0;
     double position_  = 0.0;
     bool playing_    = false;
+    bool muted_      = false;
+    float volumeBeforeMute_ = 1.0f;
     QString title_;
     QString error_;
     qint64 startPts_ = 0;     // 播放起始时间（ms），用于估算进度

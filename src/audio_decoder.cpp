@@ -146,7 +146,12 @@ bool AudioDecoder::seek(double positionSec) {
     int ret = avformat_seek_file(fmtCtx_, streamIdx_, INT64_MIN, ts, INT64_MAX, AVSEEK_FLAG_BACKWARD);
 
     if (ret >= 0) {
-        avcodec_flush_buffers(codecCtx_); // 清空解码器内部缓存的旧帧
+        avcodec_flush_buffers(codecCtx_);
+        if (swrCtx_) {
+            uint8_t *flushBuf = nullptr;
+            swr_convert(swrCtx_, &flushBuf, 0, nullptr, 0);
+            swr_init(swrCtx_);
+        }
     }
 
     seeking_.store(false);

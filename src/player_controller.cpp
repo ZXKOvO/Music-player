@@ -10,6 +10,10 @@ PlayerController::PlayerController(QObject *parent)
     posTimer_.setInterval(200); // 每 200ms 更新进度
     connect(&posTimer_, &QTimer::timeout, this, &PlayerController::onUpdatePosition);
 
+    seekTimer_.setSingleShot(true);
+    seekTimer_.setInterval(150); // 防抖间隔
+    connect(&seekTimer_, &QTimer::timeout, this, &PlayerController::doSeek);
+
     // 初始化 SDL 音频子系统（仅需一次）
     static bool sdlInited = false;
     if (!sdlInited) {
@@ -99,6 +103,8 @@ void PlayerController::togglePlay() {
 
 // 停止播放，重置状态
 void PlayerController::stop() {
+    seekTimer_.stop();
+    pendingSeekPos_ = -1;
     stopDecoding();
     audioOutput_.close();  // 关闭 SDL 设备，下次 playFile 重新打开
     ringBuf_.clear();
@@ -107,17 +113,52 @@ void PlayerController::stop() {
     playing_ = false;
     position_ = 0.0;
     duration_ = 0.0;
+    title_.clear();
     emit playingChanged();
     emit positionChanged();
     emit durationChanged();
+    emit titleChanged();
 }
 
-// 跳转到指定位置
+// seek 防抖：记录位置并延迟执行
 void PlayerController::seek(double pos) {
     if (!decoder_.isOpen()) return;
-    decoder_.seek(pos);
+
+    pendingSeekPos_ = pos;
     position_ = pos;
     startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(pos * 1000);
+    emit positionChanged();
+
+    seekTimer_.start();
+}
+
+// 实际执行 seek
+void PlayerController::doSeek() {
+    if (pendingSeekPos_ < 0 || !decoder_.isOpen()) return;
+
+    double pos = pendingSeekPos_;
+    pendingSeekPos_ = -1;
+
+    bool wasPlaying = playing_;
+    if (wasPlaying) {
+        audioOutput_.pause();
+        posTimer_.stop();
+    }
+
+    stopDecoding();
+
+    decoder_.seek(pos);
+
+    startDecoding();
+
+    position_ = pos;
+    startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(pos * 1000);
+
+    if (wasPlaying) {
+        audioOutput_.play();
+        posTimer_.start();
+    }
+
     emit positionChanged();
 }
 
@@ -128,6 +169,22 @@ float PlayerController::volume() const {
 void PlayerController::setVolume(float vol) {
     audioOutput_.setVolume(vol);
     emit volumeChanged();
+}
+
+void PlayerController::setMuted(bool muted) {
+    if (muted_ == muted) return;
+    muted_ = muted;
+    if (muted_) {
+        volumeBeforeMute_ = audioOutput_.volume();
+        audioOutput_.setVolume(0.0f);
+    } else {
+        audioOutput_.setVolume(volumeBeforeMute_);
+    }
+    emit mutedChanged();
+}
+
+void PlayerController::toggleMute() {
+    setMuted(!muted_);
 }
 
 // 定时轮询进度：根据经过时间估算当前播放位置
@@ -158,7 +215,9 @@ void PlayerController::startDecoding() {
             // 写入环形缓冲区，满了则阻塞等待
             size_t offset = 0;
             while (offset < static_cast<size_t>(n) && decoding_.load()) {
-                offset += ringBuf_.write(buf + offset, static_cast<size_t>(n) - offset);
+                size_t w = ringBuf_.write(buf + offset, static_cast<size_t>(n) - offset);
+                if (w == 0) break;
+                offset += w;
             }
         }
     });
@@ -168,13 +227,14 @@ void PlayerController::startDecoding() {
 // 停止解码线程
 void PlayerController::stopDecoding() {
     decoding_.store(false);
-    ringBuf_.setEof(true);   // 唤醒可能在阻塞等待空间的写入线程
-    ringBuf_.clear();        // 清空数据，唤醒可能在阻塞等待数据的读取线程
+    ringBuf_.setEof(true);   // 唤醒阻塞的写入线程
     if (decodeThread_) {
         decodeThread_->wait(3000);
         delete decodeThread_;
         decodeThread_ = nullptr;
     }
+    // 线程停止后再 clear，防止旧线程再次 setEof
+    ringBuf_.clear();
 }
 
 // 从文件路径中提取不带扩展名的文件名作为标题

@@ -13,13 +13,13 @@ public:
     // 生产者：写入 PCM 数据，阻塞直到有足够空间，返回实际写入字节数
     size_t write(const uint8_t *data, size_t size);
 
-    // 消费者：读取 PCM 数据，有数据时立即返回（非阻塞式部分读取），返回实际读取字节数
+    // 消费者：非阻塞读取，有多少读多少
     size_t read(uint8_t *data, size_t size);
 
     size_t readable() const;   // 当前可读字节数
     size_t writable() const;   // 当前可写字节数
     void clear();              // 重置缓冲区，清空数据并清除 EOF 标志
-    void setEof(bool eof);    // 标记 EOF，唤醒等待中的消费者
+    void setEof(bool eof);    // 标记 EOF
     bool isEof() const;       // 查询是否已标记 EOF
 
 private:
