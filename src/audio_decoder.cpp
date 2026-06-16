@@ -4,10 +4,14 @@
 AudioDecoder::AudioDecoder() {}
 
 // 析构时自动释放 FFmpeg 资源
-AudioDecoder::~AudioDecoder() { close(); }
+AudioDecoder::~AudioDecoder()
+{
+    close();
+}
 
 // 打开音频文件：探测流信息 → 查找音频流 → 打开解码器 → 初始化重采样器
-bool AudioDecoder::open(const QString &filePath) {
+bool AudioDecoder::open(const QString &filePath)
+{
     close();
 
     // 打开文件并探测流信息
@@ -38,8 +42,7 @@ bool AudioDecoder::open(const QString &filePath) {
     }
 
     // 计算时长（秒）
-    duration_ = fmtCtx_->streams[streamIdx_]->duration
-                * av_q2d(fmtCtx_->streams[streamIdx_]->time_base);
+    duration_ = fmtCtx_->streams[streamIdx_]->duration * av_q2d(fmtCtx_->streams[streamIdx_]->time_base);
 
     // 初始化重采样器，将任意输入格式转换为统一的 FLT32/44100Hz/双声道
     initResampler();
@@ -47,15 +50,21 @@ bool AudioDecoder::open(const QString &filePath) {
 }
 
 // 创建重采样器：将源音频格式转换为目标统一格式（FLT32/44100Hz/双声道）
-bool AudioDecoder::initResampler() {
+bool AudioDecoder::initResampler()
+{
     AVChannelLayout outLayout;
     av_channel_layout_default(&outLayout, outputFormat_.channels);
 
     // 配置重采样参数：源格式 → 目标统一格式
     int ret = swr_alloc_set_opts2(&swrCtx_,
-        &outLayout, outputFormat_.sampleFormat, outputFormat_.sampleRate,
-        &codecCtx_->ch_layout, codecCtx_->sample_fmt, codecCtx_->sample_rate,
-        0, nullptr);
+                                  &outLayout,
+                                  outputFormat_.sampleFormat,
+                                  outputFormat_.sampleRate,
+                                  &codecCtx_->ch_layout,
+                                  codecCtx_->sample_fmt,
+                                  codecCtx_->sample_rate,
+                                  0,
+                                  nullptr);
     if (ret < 0 || !swrCtx_) {
         qWarning() << "Cannot create resampler";
         return false;
@@ -65,21 +74,32 @@ bool AudioDecoder::initResampler() {
 }
 
 // 释放所有 FFmpeg 资源并重置状态
-void AudioDecoder::close() {
+void AudioDecoder::close()
+{
     // 按依赖逆序释放：重采样器 → 解码器 → 封装上下文
-    if (swrCtx_)  { swr_free(&swrCtx_); swrCtx_ = nullptr; }
-    if (codecCtx_) { avcodec_free_context(&codecCtx_); codecCtx_ = nullptr; }
-    if (fmtCtx_)  { avformat_close_input(&fmtCtx_); fmtCtx_ = nullptr; }
+    if (swrCtx_) {
+        swr_free(&swrCtx_);
+        swrCtx_ = nullptr;
+    }
+    if (codecCtx_) {
+        avcodec_free_context(&codecCtx_);
+        codecCtx_ = nullptr;
+    }
+    if (fmtCtx_) {
+        avformat_close_input(&fmtCtx_);
+        fmtCtx_ = nullptr;
+    }
     streamIdx_ = -1;
     duration_ = 0.0;
 }
 
 // 循环读取 packet → 解码 → 重采样，将 PCM 数据填入 buffer，返回总字节数
-int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize) {
+int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize)
+{
     if (seeking_.load()) return 0;
 
     AVPacket *pkt = av_packet_alloc();
-    AVFrame  *frame = av_frame_alloc();
+    AVFrame *frame = av_frame_alloc();
     int totalRead = 0;
 
     // 每个采样占用的字节数 = 声道数 × float大小
@@ -121,12 +141,12 @@ int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize) {
             // 重采样并写入 buffer 对应偏移位置
             uint8_t *outBuf = buffer + totalRead;
             int outSamples = swr_convert(swrCtx_,
-                &outBuf, maxOutSamples,
-                (const uint8_t**)frame->extended_data, frame->nb_samples);
+                                         &outBuf,
+                                         maxOutSamples,
+                                         (const uint8_t **) frame->extended_data,
+                                         frame->nb_samples);
 
-            if (outSamples > 0) {
-                totalRead += outSamples * bytesPerSample;
-            }
+            if (outSamples > 0) { totalRead += outSamples * bytesPerSample; }
             av_frame_unref(frame);
         }
     }
@@ -137,7 +157,8 @@ int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize) {
 }
 
 // 跳转到指定秒数位置，向最近关键帧对齐，并清空解码器缓存
-bool AudioDecoder::seek(double positionSec) {
+bool AudioDecoder::seek(double positionSec)
+{
     if (!fmtCtx_) return false;
     seeking_.store(true);
 
@@ -159,6 +180,7 @@ bool AudioDecoder::seek(double positionSec) {
 }
 
 // 返回音频时长（秒）
-double AudioDecoder::duration() const {
+double AudioDecoder::duration() const
+{
     return duration_;
 }

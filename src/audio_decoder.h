@@ -10,17 +10,19 @@ extern "C" {
 }
 
 // 统一的输出音频格式描述
-struct AudioFormat {
+struct AudioFormat
+{
     int sampleRate = 44100;
     int channels = 2;
     AVSampleFormat sampleFormat = AV_SAMPLE_FMT_FLT; // 32-bit float
 };
 
 // FFmpeg 音频解码器：打开文件 → 解码 → 重采样为统一格式（FLT32/44100Hz/双声道）
-class AudioDecoder {
+class AudioDecoder
+{
 public:
-    AudioDecoder();   // 默认构造
-    ~AudioDecoder();  // 析构时自动释放 FFmpeg 资源
+    AudioDecoder();  // 默认构造
+    ~AudioDecoder(); // 析构时自动释放 FFmpeg 资源
 
     // 打开音频文件，初始化解码器和重采样器，成功返回 true
     bool open(const QString &filePath);
@@ -44,13 +46,13 @@ private:
     // 创建并初始化重采样器，将源格式转换为目标统一格式
     bool initResampler();
 
-    AVFormatContext  *fmtCtx_   = nullptr; // 封装上下文
-    AVCodecContext   *codecCtx_ = nullptr; // 解码器上下文
-    SwrContext       *swrCtx_  = nullptr;  // 重采样上下文
-    int streamIdx_ = -1;                  // 音频流索引
+    AVFormatContext *fmtCtx_ = nullptr;  // 封装上下文
+    AVCodecContext *codecCtx_ = nullptr; // 解码器上下文
+    SwrContext *swrCtx_ = nullptr;       // 重采样上下文
+    int streamIdx_ = -1;                 // 音频流索引
 
-    AudioFormat outputFormat_;             // 统一输出格式
+    AudioFormat outputFormat_; // 统一输出格式
     double duration_ = 0.0;
 
-    std::atomic<bool> seeking_{false};    // seek 进行中标志，防止 readPCM 竞争
+    std::atomic<bool> seeking_{false}; // seek 进行中标志，防止 readPCM 竞争
 };

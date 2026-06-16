@@ -2,14 +2,17 @@
 #include <QObject>
 #include <QTimer>
 #include <QThread>
+#include <QtQml/qqmlregistration.h>
 #include "audio_decoder.h"
 #include "sdl_audio_output.h"
 #include "ring_buffer.h"
 
 // 播放控制器：协调 AudioDecoder + RingBuffer + SDLAudioOutput，
 // 暴露 Q_PROPERTY / Q_INVOKABLE 给 QML 调用
-class PlayerController : public QObject {
+class PlayerController : public QObject
+{
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(bool playing READ playing NOTIFY playingChanged)
     Q_PROPERTY(double duration READ duration NOTIFY durationChanged)
     Q_PROPERTY(double position READ position NOTIFY positionChanged)
@@ -75,15 +78,15 @@ private:
     QThread *decodeThread_ = nullptr;
     std::atomic<bool> decoding_{false};
 
-    QTimer posTimer_;          // 进度轮询定时器
-    QTimer seekTimer_;          // seek 防抖
+    QTimer posTimer_;            // 进度轮询定时器
+    QTimer seekTimer_;           // seek 防抖
     double pendingSeekPos_ = -1; // 待 seek 位置（秒）
-    double duration_  = 0.0;
-    double position_  = 0.0;
-    bool playing_    = false;
-    bool muted_      = false;
+    double duration_ = 0.0;
+    double position_ = 0.0;
+    bool playing_ = false;
+    bool muted_ = false;
     float volumeBeforeMute_ = 1.0f;
     QString title_;
     QString error_;
-    qint64 startPts_ = 0;     // 播放起始时间（ms），用于估算进度
+    qint64 startPts_ = 0; // 播放起始时间（ms），用于估算进度
 };

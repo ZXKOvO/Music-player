@@ -23,25 +23,23 @@ PlayerController::PlayerController(QObject *parent)
 }
 
 // 析构时停止解码线程、关闭音频设备和 SDL
-PlayerController::~PlayerController() {
+PlayerController::~PlayerController()
+{
     stopDecoding();
     audioOutput_.close();
 }
 
 // 播放指定文件路径，支持 file:/// URL 或本地路径
-void PlayerController::playFile(const QString &filePath) {
+void PlayerController::playFile(const QString &filePath)
+{
     qDebug() << "playFile:" << filePath;
 
     // 先停止当前播放
-    if (playing_ || decoder_.isOpen()) {
-        stop();
-    }
+    if (playing_ || decoder_.isOpen()) { stop(); }
 
     // 将 file:/// URL 转为本地路径，处理中文等特殊字符
     QString localPath = filePath;
-    if (localPath.startsWith("file://")) {
-        localPath = QUrl(filePath).toLocalFile();
-    }
+    if (localPath.startsWith("file://")) { localPath = QUrl(filePath).toLocalFile(); }
 
     // 打开解码器
     if (!decoder_.open(localPath)) {
@@ -51,9 +49,7 @@ void PlayerController::playFile(const QString &filePath) {
         return;
     }
     error_.clear();
-    qDebug() << "Opened:" << localPath
-             << "duration=" << decoder_.duration()
-             << "rate=" << decoder_.format().sampleRate
+    qDebug() << "Opened:" << localPath << "duration=" << decoder_.duration() << "rate=" << decoder_.format().sampleRate
              << "ch=" << decoder_.format().channels;
 
     duration_ = decoder_.duration();
@@ -65,8 +61,7 @@ void PlayerController::playFile(const QString &filePath) {
     // 每次播放新文件都必须重新打开 SDL 设备（确保音频规格匹配）
     audioOutput_.close();
     ringBuf_.clear();
-    if (!audioOutput_.open(ringBuf_,
-            decoder_.format().sampleRate, decoder_.format().channels)) {
+    if (!audioOutput_.open(ringBuf_, decoder_.format().sampleRate, decoder_.format().channels)) {
         error_ = QStringLiteral("Cannot open audio device");
         emit errorOccurred(error_);
         qWarning() << error_;
@@ -86,7 +81,8 @@ void PlayerController::playFile(const QString &filePath) {
 }
 
 // 播放/暂停切换
-void PlayerController::togglePlay() {
+void PlayerController::togglePlay()
+{
     if (!decoder_.isOpen()) return;
     if (playing_) {
         audioOutput_.pause();
@@ -102,11 +98,12 @@ void PlayerController::togglePlay() {
 }
 
 // 停止播放，重置状态
-void PlayerController::stop() {
+void PlayerController::stop()
+{
     seekTimer_.stop();
     pendingSeekPos_ = -1;
     stopDecoding();
-    audioOutput_.close();  // 关闭 SDL 设备，下次 playFile 重新打开
+    audioOutput_.close(); // 关闭 SDL 设备，下次 playFile 重新打开
     ringBuf_.clear();
     decoder_.close();
     posTimer_.stop();
@@ -121,7 +118,8 @@ void PlayerController::stop() {
 }
 
 // seek 防抖：记录位置并延迟执行
-void PlayerController::seek(double pos) {
+void PlayerController::seek(double pos)
+{
     if (!decoder_.isOpen()) return;
 
     pendingSeekPos_ = pos;
@@ -133,7 +131,8 @@ void PlayerController::seek(double pos) {
 }
 
 // 实际执行 seek
-void PlayerController::doSeek() {
+void PlayerController::doSeek()
+{
     if (pendingSeekPos_ < 0 || !decoder_.isOpen()) return;
 
     double pos = pendingSeekPos_;
@@ -162,16 +161,19 @@ void PlayerController::doSeek() {
     emit positionChanged();
 }
 
-float PlayerController::volume() const {
+float PlayerController::volume() const
+{
     return audioOutput_.volume();
 }
 
-void PlayerController::setVolume(float vol) {
+void PlayerController::setVolume(float vol)
+{
     audioOutput_.setVolume(vol);
     emit volumeChanged();
 }
 
-void PlayerController::setMuted(bool muted) {
+void PlayerController::setMuted(bool muted)
+{
     if (muted_ == muted) return;
     muted_ = muted;
     if (muted_) {
@@ -183,12 +185,14 @@ void PlayerController::setMuted(bool muted) {
     emit mutedChanged();
 }
 
-void PlayerController::toggleMute() {
+void PlayerController::toggleMute()
+{
     setMuted(!muted_);
 }
 
 // 定时轮询进度：根据经过时间估算当前播放位置
-void PlayerController::onUpdatePosition() {
+void PlayerController::onUpdatePosition()
+{
     if (!playing_) return;
     double elapsed = (QDateTime::currentMSecsSinceEpoch() - startPts_) / 1000.0;
     position_ = qMin(elapsed, duration_);
@@ -202,7 +206,8 @@ void PlayerController::onUpdatePosition() {
 }
 
 // 启动解码线程：循环从 decoder 读取 PCM 写入 RingBuffer
-void PlayerController::startDecoding() {
+void PlayerController::startDecoding()
+{
     decoding_.store(true);
     decodeThread_ = QThread::create([this]() {
         uint8_t buf[65536];
@@ -225,9 +230,10 @@ void PlayerController::startDecoding() {
 }
 
 // 停止解码线程
-void PlayerController::stopDecoding() {
+void PlayerController::stopDecoding()
+{
     decoding_.store(false);
-    ringBuf_.setEof(true);   // 唤醒阻塞的写入线程
+    ringBuf_.setEof(true); // 唤醒阻塞的写入线程
     if (decodeThread_) {
         decodeThread_->wait(3000);
         delete decodeThread_;
@@ -238,6 +244,7 @@ void PlayerController::stopDecoding() {
 }
 
 // 从文件路径中提取不带扩展名的文件名作为标题
-QString PlayerController::extractTitle(const QString &filePath) {
+QString PlayerController::extractTitle(const QString &filePath)
+{
     return QFileInfo(filePath).completeBaseName();
 }

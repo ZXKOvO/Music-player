@@ -35,6 +35,8 @@ qt_add_qml_module(appMusicPlayer
         src/sdl_audio_output.cpp
         src/player_controller.h
         src/player_controller.cpp
+        src/playlist_model.h    # 播放列表数据模型
+        src/playlist_model.cpp
     QML_FILES
         Main.qml
 )

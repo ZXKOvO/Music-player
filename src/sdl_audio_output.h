@@ -4,7 +4,8 @@
 #include "ring_buffer.h"
 
 // SDL2 音频输出：从 RingBuffer 读取 PCM 数据并播放
-class SDLAudioOutput {
+class SDLAudioOutput
+{
 public:
     SDLAudioOutput();
     ~SDLAudioOutput();

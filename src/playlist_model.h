@@ -2,28 +2,26 @@
 #include <QAbstractListModel>
 #include <QStringList>
 #include <QHash>
+#include <QtQml/qqmlregistration.h>
 
 // 歌曲数据项
-struct Song {
+struct Song
+{
     QString filePath;
     QString title;
     QString artist;
     QString album;
-    qint64  durationMs = 0; // 毫秒
+    qint64 durationMs = 0; // 毫秒
 };
 
 // 播放列表模型：QAbstractListModel，供 QML ListView 显示歌曲列表
-class PlaylistModel : public QAbstractListModel {
+class PlaylistModel : public QAbstractListModel
+{
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 public:
-    enum Roles {
-        FilePathRole = Qt::UserRole + 1,
-        TitleRole,
-        ArtistRole,
-        AlbumRole,
-        DurationRole
-    };
+    enum Roles { FilePathRole = Qt::UserRole + 1, TitleRole, ArtistRole, AlbumRole, DurationRole };
 
     explicit PlaylistModel(QObject *parent = nullptr);
 

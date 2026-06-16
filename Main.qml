@@ -1,141 +1,392 @@
-// 主窗口：打开文件 + 播放控制
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import com.musicplayer.backend 1.0
+import MusicPlayer
 
 ApplicationWindow {
     id: window
-    width: 480
-    height: 200
+    width: 1000
+    height: 500
     visible: true
     title: qsTr("Music Player")
-    color: "#121212"
+    color: "#2b2b2b"
 
-    PlayerController { id: player }
+    property int currentIndex: -1  // 当前播放歌曲索引，-1 表示未选中
+
+    PlaylistModel { id: playlistModel }  // 播放列表数据模型
+
+    PlayerController {
+        id: player
+        onPlaybackFinished: playNext()  // 播放完毕自动切下一首
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 16
+        spacing: 0
 
-        // 歌曲标题 / 提示选歌
-        Label {
-            text: player.title || ""
-            color: "#FFFFFF"
-            font.pixelSize: 18
-            font.bold: true
-            elide: Text.ElideRight
-            Layout.fillWidth: true
-            visible: player.title !== ""
-        }
-
-        Label {
-            text: qsTr("Please select a song to play")
-            color: "#AAAAAA"
-            font.pixelSize: 20
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
+        // Top area: playlist + lyrics side by side
+        RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            verticalAlignment: Text.AlignVCenter
-            visible: player.title === ""
-        }
+            spacing: 0
 
-        // 进度条 + 时间
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
+            // Left: Playlist panel
+            Rectangle {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 350
+                color: "#ffffff"
 
-            Label {
-                text: formatTime(player.position)
-                color: "#B3B3B3"
-                font.pixelSize: 12
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 8
+
+                    // 播放列表标题栏：显示"播放列表"和歌曲数量
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Label {
+                            text: qsTr("播放列表")
+                            color: "#000000"
+                            font.pixelSize: 18
+                            font.bold: true
+                        }
+                        Label {
+                            text: playlistModel.count
+                            color: "#666666"
+                            font.pixelSize: 16
+                        }
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    // 歌曲列表：双击播放对应歌曲
+                    ListView {
+                        id: playlistView
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        model: playlistModel
+                        currentIndex: window.currentIndex
+                        spacing: 2
+
+                        delegate: Rectangle {
+                            width: playlistView.width
+                            height: 40
+                            color: ListView.isCurrentItem ? "#e8e8e8" : (hoverHandler.hovered ? "#f0f0f0" : "transparent")
+
+                            // 双击播放
+                            TapHandler {
+                                onDoubleTapped: {
+                                    window.currentIndex = index
+                                    player.playFile(filePath)
+                                }
+                            }
+
+                            HoverHandler {
+                                id: hoverHandler
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                spacing: 12
+
+                                Label {
+                                    text: (index + 1)
+                                    color: "#666666"
+                                    font.pixelSize: 14
+                                    Layout.preferredWidth: 28
+                                    horizontalAlignment: Text.AlignRight
+                                }
+
+                                Label {
+                                    text: {
+                                        var artistText = artist || ""
+                                        var titleText = title || ""
+                                        if (artistText && titleText)
+                                            return artistText + " - " + titleText
+                                        return titleText
+                                    }
+                                    color: "#000000"
+                                    font.pixelSize: 14
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                            }
+                        }
+
+                        ScrollBar.vertical: ScrollBar {
+                            policy: ScrollBar.AsNeeded
+                        }
+                    }
+
+                    // 清空播放列表按钮
+                    Button {
+                        text: qsTr("清空播放列表")
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        flat: true
+                        contentItem: Label {
+                            text: qsTr("清空播放列表")
+                            color: "#888888"
+                            font.pixelSize: 14
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            color: parent.hovered ? "#e8e8e8" : "transparent"
+                            radius: 4
+                        }
+                        onClicked: {
+                            playlistModel.clear()
+                            window.currentIndex = -1
+                            player.stop()
+                        }
+                    }
+                }
             }
 
-            Slider {
-                id: progressSlider
+            // Divider line
+            Rectangle {
+                Layout.preferredWidth: 1
+                Layout.fillHeight: true
+                color: "#cccccc"
+            }
+
+            // Right: Lyrics area
+            Rectangle {
                 Layout.fillWidth: true
-                from: 0
-                to: player.duration || 1
-                value: pressed ? value : player.position
-                onMoved: player.seek(value)
-            }
+                Layout.fillHeight: true
+                color: "#ffffff"
 
-            Label {
-                text: formatTime(player.duration)
-                color: "#B3B3B3"
-                font.pixelSize: 12
-            }
-        }
-
-        // 控制按钮
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            spacing: 12
-
-            Button {
-                text: qsTr("Open File")
-                onClicked: fileDialog.open()
-            }
-
-            Button {
-                text: player.playing ? qsTr("Pause") : qsTr("Play")
-                enabled: player.title !== ""
-                onClicked: player.togglePlay()
-            }
-
-            Button {
-                text: qsTr("Stop")
-                enabled: player.title !== ""
-                onClicked: player.stop()
-            }
-
-            // 静音按钮
-            Button {
-                text: player.muted ? qsTr("Unmute") : qsTr("Mute")
-                onClicked: player.toggleMute()
-            }
-
-            // 音量
-            Slider {
-                width: 100
-                from: 0
-                to: 1
-                value: player.muted ? 0 : player.volume
-                onMoved: {
-                    player.setVolume(value)
-                    if (player.muted && value > 0)
-                        player.setMuted(false)
+                Label {
+                    anchors.centerIn: parent
+                    color: "#999999"
+                    font.pixelSize: 20
                 }
             }
         }
 
-        // 错误提示
-        Label {
-            text: player.error
-            color: "#FF6666"
-            font.pixelSize: 12
-            visible: player.error !== ""
+        // 底部播放控制栏
+        Rectangle {
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            Layout.preferredHeight: 56
+            color: "#1a1a1a"
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                anchors.topMargin: 8
+                anchors.bottomMargin: 8
+                spacing: 10
+
+                // 添加歌曲按钮
+                Button {
+                    text: qsTr("+ Add")
+                    onClicked: fileDialog.open()
+                    contentItem: Label {
+                        text: qsTr("添加歌曲")
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
+                // 播放/暂停按钮（根据状态动态切换文字）
+                Button {
+                    text: player.playing ? qsTr("暂停") : qsTr("播放")
+                    onClicked: player.togglePlay()
+                    contentItem: Label {
+                        text: player.playing ? qsTr("暂停") : qsTr("播放")
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
+                // 停止按钮
+                Button {
+                    text: qsTr("Stop")
+                    onClicked: player.stop()
+                    contentItem: Label {
+                        text: qsTr("刷新")
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
+                Item { Layout.preferredWidth: 8 }
+
+                // 当前播放歌曲信息
+                Label {
+                    text: player.title || ""
+                    color: "#ffffff"
+                    font.pixelSize: 13
+                    font.bold: true
+                    elide: Text.ElideRight
+                    Layout.preferredWidth: 150
+                    visible: player.title !== ""
+                }
+
+                // Current time
+                Label {
+                    text: formatTime(player.position)
+                    color: "#cccccc"
+                    font.pixelSize: 12
+                    Layout.preferredWidth: 36
+                    horizontalAlignment: Text.AlignRight
+                }
+
+                // 播放进度条（未选歌时禁用）
+                Slider {
+                    id: progressSlider
+                    Layout.fillWidth: true
+                    from: 0
+                    to: player.duration || 1
+                    value: pressed ? value : player.position
+                    enabled: player.title !== ""
+                    onMoved: player.seek(value)
+                    background: Rectangle {
+                        x: progressSlider.leftPadding
+                        y: progressSlider.topPadding + progressSlider.availableHeight / 2 - height / 2
+                        implicitWidth: 200
+                        implicitHeight: 4
+                        width: progressSlider.availableWidth
+                        height: implicitHeight
+                        radius: 2
+                        color: "#555555"
+
+                        Rectangle {
+                            width: progressSlider.visualPosition * parent.width
+                            height: parent.height
+                            color: "#1db954"
+                            radius: 2
+                        }
+                    }
+                    handle: Rectangle {
+                        x: progressSlider.leftPadding + progressSlider.visualPosition * (progressSlider.availableWidth - width)
+                        y: progressSlider.topPadding + progressSlider.availableHeight / 2 - height / 2
+                        implicitWidth: 14
+                        implicitHeight: 14
+                        radius: 7
+                        color: progressSlider.pressed ? "#1ed760" : "#ffffff"
+                    }
+                }
+
+                // Total time
+                Label {
+                    text: formatTime(player.duration)
+                    color: "#cccccc"
+                    font.pixelSize: 12
+                    Layout.preferredWidth: 36
+                }
+
+                Item { Layout.preferredWidth: 4 }
+
+                // Mute button
+                Button {
+                    text: qsTr("Mute")
+                    onClicked: player.toggleMute()
+                    contentItem: Label {
+                        text: player.muted ? qsTr("Unmute") : qsTr("Mute")
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
+                // 音量调节滑块
+                Slider {
+                    id: volumeSlider
+                    Layout.preferredWidth: 100
+                    from: 0
+                    to: 1
+                    value: player.muted ? 0 : player.volume
+                    onMoved: {
+                        player.setVolume(value)
+                        if (player.muted && value > 0)
+                            player.setMuted(false)
+                    }
+                    background: Rectangle {
+                        x: volumeSlider.leftPadding
+                        y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                        implicitWidth: 100
+                        implicitHeight: 4
+                        width: volumeSlider.availableWidth
+                        height: implicitHeight
+                        radius: 2
+                        color: "#555555"
+
+                        Rectangle {
+                            width: volumeSlider.visualPosition * parent.width
+                            height: parent.height
+                            color: "#1db954"
+                            radius: 2
+                        }
+                    }
+                    handle: Rectangle {
+                        x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+                        y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                        implicitWidth: 14
+                        implicitHeight: 14
+                        radius: 7
+                        color: volumeSlider.pressed ? "#1ed760" : "#ffffff"
+                    }
+                }
+            }
         }
     }
 
-    // 文件选择对话框
+    // 文件选择对话框（支持多选）
     FileDialog {
         id: fileDialog
         title: qsTr("Select Audio File")
         nameFilters: ["Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape)", "All Files (*)"]
         onAccepted: {
-            // 使用 QUrl.toLocalFile 正确处理 file:/// 和中文路径
-            var path = selectedFile.toString()
-            player.playFile(path)
+            var paths = selectedFiles
+            for (var i = 0; i < paths.length; i++) {
+                playlistModel.addFile(paths[i].toString())
+            }
+            if (window.currentIndex === -1 && playlistModel.count > 0) {
+                window.currentIndex = 0
+                player.playFile(playlistModel.filePath(0))
+            }
         }
     }
 
-    // 格式化秒数为 mm:ss
+    // 播放下一首（循环播放）
+    function playNext() {
+        if (playlistModel.count === 0) return
+        var next = window.currentIndex + 1
+        if (next >= playlistModel.count) next = 0
+        window.currentIndex = next
+        player.playFile(playlistModel.filePath(next))
+    }
+
+    // 将秒数格式化为 m:ss
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) return "0:00"
         var m = Math.floor(sec / 60)
