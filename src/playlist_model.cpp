@@ -17,11 +17,13 @@ void PlaylistModel::addFile(const QString &filePath)
     emit countChanged();
 }
 
-// 批量添加文件路径
+// 批量添加文件路径（自动跳过已存在的文件）
 void PlaylistModel::addFiles(const QStringList &filePaths)
 {
     for (const auto &fp : filePaths) {
-        addFile(fp);
+        if (!contains(fp)) {
+            addFile(fp);
+        }
     }
 }
 
@@ -55,6 +57,14 @@ QString PlaylistModel::filePath(int row) const
 int PlaylistModel::count() const
 {
     return songs_.size();
+}
+
+bool PlaylistModel::contains(const QString &filePath) const
+{
+    for (const auto &s : songs_) {
+        if (s.filePath == filePath) return true;
+    }
+    return false;
 }
 
 int PlaylistModel::rowCount(const QModelIndex &parent) const

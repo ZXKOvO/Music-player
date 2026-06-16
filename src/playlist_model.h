@@ -36,6 +36,8 @@ public:
 
     // 获取指定行的文件路径
     Q_INVOKABLE QString filePath(int row) const;
+    // 判断列表中是否已包含指定文件路径
+    Q_INVOKABLE bool contains(const QString &filePath) const;
     // 当前列表中的歌曲数量
     int count() const;
 

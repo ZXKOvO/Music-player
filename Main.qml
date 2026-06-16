@@ -199,12 +199,46 @@ ApplicationWindow {
                     }
                 }
 
+                // 上一首按钮
+                Button {
+                    text: qsTr("上一首")
+                    onClicked: playPrevious()
+                    contentItem: Label {
+                        text: qsTr("上一首")
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
                 // 播放/暂停按钮（根据状态动态切换文字）
                 Button {
                     text: player.playing ? qsTr("暂停") : qsTr("播放")
                     onClicked: player.togglePlay()
                     contentItem: Label {
                         text: player.playing ? qsTr("暂停") : qsTr("播放")
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
+                // 下一首按钮
+                Button {
+                    text: qsTr("下一首")
+                    onClicked: playNext()
+                    contentItem: Label {
+                        text: qsTr("下一首")
                         color: "#ffffff"
                         font.pixelSize: 13
                         horizontalAlignment: Text.AlignHCenter
@@ -364,11 +398,15 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         title: qsTr("Select Audio File")
+        fileMode: FileDialog.OpenFiles
         nameFilters: ["Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape)", "All Files (*)"]
         onAccepted: {
             var paths = selectedFiles
             for (var i = 0; i < paths.length; i++) {
-                playlistModel.addFile(paths[i].toString())
+                var path = paths[i].toString()
+                if (!playlistModel.contains(path)) {
+                    playlistModel.addFile(path)
+                }
             }
             if (window.currentIndex === -1 && playlistModel.count > 0) {
                 window.currentIndex = 0
@@ -384,6 +422,15 @@ ApplicationWindow {
         if (next >= playlistModel.count) next = 0
         window.currentIndex = next
         player.playFile(playlistModel.filePath(next))
+    }
+
+    // 播放上一首（循环播放）
+    function playPrevious() {
+        if (playlistModel.count === 0) return
+        var prev = window.currentIndex - 1
+        if (prev < 0) prev = playlistModel.count - 1
+        window.currentIndex = prev
+        player.playFile(playlistModel.filePath(prev))
     }
 
     // 将秒数格式化为 m:ss
