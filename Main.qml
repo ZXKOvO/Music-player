@@ -18,7 +18,7 @@ ApplicationWindow {
 
     PlayerController {
         id: player
-        onPlaybackFinished: playNext()  // 播放完毕自动切下一首
+        onPlaybackFinished: autoPlayNext()
     }
 
     ColumnLayout {
@@ -267,6 +267,29 @@ ApplicationWindow {
                     }
                 }
 
+                // 播放模式切换按钮
+                Button {
+                    onClicked: playlistModel.nextPlayMode()
+                    contentItem: Label {
+                        text: {
+                            switch (playlistModel.playMode) {
+                            case 0: return "顺序"
+                            case 1: return "单曲循环"
+                            case 2: return "随机"
+                            default: return "顺序"
+                            }
+                        }
+                        color: "#ffffff"
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#444444" : "#333333"
+                        radius: 4
+                    }
+                }
+
                 Item { Layout.preferredWidth: 8 }
 
                 // 当前播放歌曲信息
@@ -415,7 +438,7 @@ ApplicationWindow {
         }
     }
 
-    // 播放下一首（循环播放）
+    // 下一首
     function playNext() {
         if (playlistModel.count === 0) return
         var next = window.currentIndex + 1
@@ -424,13 +447,41 @@ ApplicationWindow {
         player.playFile(playlistModel.filePath(next))
     }
 
-    // 播放上一首（循环播放）
+    // 上一首
     function playPrevious() {
         if (playlistModel.count === 0) return
         var prev = window.currentIndex - 1
         if (prev < 0) prev = playlistModel.count - 1
         window.currentIndex = prev
         player.playFile(playlistModel.filePath(prev))
+    }
+
+    // 播放完毕自动切歌
+    function autoPlayNext() {
+        if (playlistModel.count === 0) return
+        var next
+        switch (playlistModel.playMode) {
+        case 0:
+            next = window.currentIndex + 1
+            if (next >= playlistModel.count) next = 0
+            break
+        case 1:
+            next = window.currentIndex
+            break
+        case 2:
+            next = Math.floor(Math.random() * playlistModel.count)
+            if (playlistModel.count > 1) {
+                while (next === window.currentIndex) {
+                    next = Math.floor(Math.random() * playlistModel.count)
+                }
+            }
+            break
+        default:
+            next = window.currentIndex
+            break
+        }
+        window.currentIndex = next
+        player.playFile(playlistModel.filePath(next))
     }
 
     // 将秒数格式化为 m:ss

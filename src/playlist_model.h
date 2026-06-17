@@ -20,7 +20,16 @@ class PlaylistModel : public QAbstractListModel
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(int playMode READ playMode WRITE setPlayMode NOTIFY playModeChanged)
 public:
+    // 播放模式
+    enum PlayMode {
+        LoopAll = 0,     // 列表循环
+        RepeatOne = 1,   // 单曲循环
+        Shuffle = 2      // 随机播放
+    };
+    Q_ENUM(PlayMode)
+
     enum Roles { FilePathRole = Qt::UserRole + 1, TitleRole, ArtistRole, AlbumRole, DurationRole };
 
     explicit PlaylistModel(QObject *parent = nullptr);
@@ -41,6 +50,13 @@ public:
     // 当前列表中的歌曲数量
     int count() const;
 
+    // 获取当前播放模式
+    int playMode() const { return static_cast<int>(playMode_); }
+    // 设置播放模式
+    Q_INVOKABLE void setPlayMode(int mode);
+    // 切换到下一个播放模式
+    Q_INVOKABLE void nextPlayMode();
+
     // QAbstractListModel 接口
     int rowCount(const QModelIndex &parent = {}) const override;
     QVariant data(const QModelIndex &index, int role) const override;
@@ -48,7 +64,9 @@ public:
 
 signals:
     void countChanged();
+    void playModeChanged();
 
 private:
     QList<Song> songs_;
+    PlayMode playMode_ = RepeatOne;  // 默认单曲循环
 };

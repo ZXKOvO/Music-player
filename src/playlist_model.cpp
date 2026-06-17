@@ -67,6 +67,21 @@ bool PlaylistModel::contains(const QString &filePath) const
     return false;
 }
 
+// 设置播放模式
+void PlaylistModel::setPlayMode(int mode)
+{
+    if (playMode_ == static_cast<PlayMode>(mode)) return;
+    playMode_ = static_cast<PlayMode>(mode);
+    emit playModeChanged();
+}
+
+// 切换到下一个播放模式
+void PlaylistModel::nextPlayMode()
+{
+    int next = (static_cast<int>(playMode_) + 1) % 3;
+    setPlayMode(next);
+}
+
 int PlaylistModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid()) return 0;
