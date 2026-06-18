@@ -21,9 +21,7 @@ void PlaylistModel::addFile(const QString &filePath)
 void PlaylistModel::addFiles(const QStringList &filePaths)
 {
     for (const auto &fp : filePaths) {
-        if (!contains(fp)) {
-            addFile(fp);
-        }
+        if (!contains(fp)) { addFile(fp); }
     }
 }
 

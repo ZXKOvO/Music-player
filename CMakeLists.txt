@@ -21,8 +21,9 @@ pkg_check_modules(AV REQUIRED
 # 第三方依赖：SDL2
 pkg_check_modules(SDL2 REQUIRED sdl2)
 
-qt_add_executable(appMusicPlayer  WIN32)
-qt_add_qml_module(appMusicPlayer
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+qt_add_executable(MusicPlayer  WIN32)
+qt_add_qml_module(MusicPlayer
     URI MusicPlayer
     VERSION 1.0
     SOURCES
@@ -35,31 +36,33 @@ qt_add_qml_module(appMusicPlayer
         src/sdl_audio_output.cpp
         src/player_controller.h
         src/player_controller.cpp
-        src/playlist_model.h    # 播放列表数据模型
+        src/playlist_model.h
         src/playlist_model.cpp
+        src/lyrics_parser.h
+        src/lyrics_parser.cpp
     QML_FILES
         Main.qml
 )
 
-target_include_directories(appMusicPlayer PRIVATE
+target_include_directories(MusicPlayer PRIVATE
     src/
     ${AV_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
 )
 
-target_link_libraries(appMusicPlayer
+target_link_libraries(MusicPlayer
     PRIVATE Qt6::Quick
     ${AV_LIBRARIES}
     ${SDL2_LIBRARIES}
 )
 
-target_compile_options(appMusicPlayer PRIVATE
+target_compile_options(MusicPlayer PRIVATE
     ${AV_CFLAGS_OTHER}
     ${SDL2_CFLAGS_OTHER}
 )
 
 set(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}" CACHE PATH "Install path prefix" FORCE)
-install(TARGETS appMusicPlayer
+install(TARGETS MusicPlayer
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -24,9 +24,9 @@ class PlaylistModel : public QAbstractListModel
 public:
     // 播放模式
     enum PlayMode {
-        LoopAll = 0,     // 列表循环
-        RepeatOne = 1,   // 单曲循环
-        Shuffle = 2      // 随机播放
+        LoopAll = 0,   // 列表循环
+        RepeatOne = 1, // 单曲循环
+        Shuffle = 2    // 随机播放
     };
     Q_ENUM(PlayMode)
 
@@ -68,5 +68,5 @@ signals:
 
 private:
     QList<Song> songs_;
-    PlayMode playMode_ = RepeatOne;  // 默认单曲循环
+    PlayMode playMode_ = RepeatOne; // 默认单曲循环
 };

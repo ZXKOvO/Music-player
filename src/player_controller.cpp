@@ -6,6 +6,7 @@
 
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
+    , lyrics_(new LyricsParser(this))
 {
     posTimer_.setInterval(200); // 每 200ms 更新进度
     connect(&posTimer_, &QTimer::timeout, this, &PlayerController::onUpdatePosition);
@@ -49,6 +50,7 @@ void PlayerController::playFile(const QString &filePath)
         return;
     }
     error_.clear();
+    currentAudioPath_ = localPath;
     qDebug() << "Opened:" << localPath << "duration=" << decoder_.duration() << "rate=" << decoder_.format().sampleRate
              << "ch=" << decoder_.format().channels;
 
@@ -57,6 +59,9 @@ void PlayerController::playFile(const QString &filePath)
 
     title_ = extractTitle(localPath);
     emit titleChanged();
+
+    // 加载歌词文件
+    lyrics_->setFilePath(localPath);
 
     // 每次播放新文件都必须重新打开 SDL 设备（确保音频规格匹配）
     audioOutput_.close();
@@ -111,6 +116,7 @@ void PlayerController::stop()
     position_ = 0.0;
     duration_ = 0.0;
     title_.clear();
+    lyrics_->clear();
     emit playingChanged();
     emit positionChanged();
     emit durationChanged();

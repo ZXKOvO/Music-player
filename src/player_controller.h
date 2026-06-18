@@ -6,6 +6,7 @@
 #include "audio_decoder.h"
 #include "sdl_audio_output.h"
 #include "ring_buffer.h"
+#include "lyrics_parser.h"
 
 // 播放控制器：协调 AudioDecoder + RingBuffer + SDLAudioOutput，
 // 暴露 Q_PROPERTY / Q_INVOKABLE 给 QML 调用
@@ -20,6 +21,7 @@ class PlayerController : public QObject
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorOccurred)
+    Q_PROPERTY(LyricsParser* lyrics READ lyrics CONSTANT)
 public:
     explicit PlayerController(QObject *parent = nullptr);
     ~PlayerController();
@@ -45,6 +47,7 @@ public:
     Q_INVOKABLE void setMuted(bool muted);
     QString title() const { return title_; }
     QString error() const { return error_; }
+    LyricsParser* lyrics() const { return lyrics_; }
 
 signals:
     void playingChanged();
@@ -88,5 +91,7 @@ private:
     float volumeBeforeMute_ = 1.0f;
     QString title_;
     QString error_;
+    LyricsParser *lyrics_;
+    QString currentAudioPath_;  // 当前播放的音频文件路径
     qint64 startPts_ = 0; // 播放起始时间（ms），用于估算进度
 };

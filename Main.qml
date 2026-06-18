@@ -160,10 +160,57 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 color: "#ffffff"
 
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 20
+                    spacing: 0
+
+                    ListView {
+                        id: lyricsView
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        model: player.lyrics.lineCount
+                        highlightFollowsCurrentItem: false
+
+                        property int activeIndex: player.lyrics.lineAt(player.position)
+
+                    delegate: Item {
+                        width: lyricsView.width
+                        height: 36
+
+                        Label {
+                            anchors.centerIn: parent
+                            width: parent.width - 20
+                            horizontalAlignment: Text.AlignHCenter
+                            text: player.lyrics.textAt(index) || ""
+                            color: index === lyricsView.activeIndex ? "#1db954" : "#666666"
+                            font.pixelSize: index === lyricsView.activeIndex ? 18 : 14
+                            font.bold: index === lyricsView.activeIndex
+                            wrapMode: Text.Wrap
+                        }
+
+                        TapHandler {
+                            cursorShape: Qt.PointingHandCursor
+                            onTapped: player.seek(player.lyrics.timeAt(index))
+                        }
+                    }
+
+                        onActiveIndexChanged: {
+                            if (activeIndex >= 0) {
+                                positionViewAtIndex(activeIndex, ListView.Center)
+                            }
+                        }
+                    }
+                }
+
+                // 无歌词提示
                 Label {
                     anchors.centerIn: parent
+                    visible: player.lyrics.lineCount === 0
                     color: "#999999"
                     font.pixelSize: 20
+                    text: player.title ? "暂无歌词" : "请播放歌曲"
                 }
             }
         }
