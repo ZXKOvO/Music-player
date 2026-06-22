@@ -7,15 +7,27 @@
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
     , lyrics_(new LyricsParser(this))
+    , lyricsFetcher_(new LyricsFetcher(this))
 {
-    posTimer_.setInterval(200); // 每 200ms 更新进度
+    posTimer_.setInterval(200);
     connect(&posTimer_, &QTimer::timeout, this, &PlayerController::onUpdatePosition);
 
     seekTimer_.setSingleShot(true);
-    seekTimer_.setInterval(150); // 防抖间隔
+    seekTimer_.setInterval(150);
     connect(&seekTimer_, &QTimer::timeout, this, &PlayerController::doSeek);
 
-    // 初始化 SDL 音频子系统（仅需一次）
+    connect(lyricsFetcher_, &LyricsFetcher::lyricsReady, this, [this](const QString &lrc) {
+        qDebug() << "Online lyrics received, size=" << lrc.size();
+        lyrics_->loadFromString(lrc);
+        qDebug() << "Online lyrics loaded, lines=" << lyrics_->lineCount();
+    });
+    connect(lyricsFetcher_, &LyricsFetcher::lyricsNotFound, this, [this]() {
+        qDebug() << "LyricsFetcher: no lyrics found online, keeping local LRC";
+    });
+    connect(lyricsFetcher_, &LyricsFetcher::errorOccurred, this, [](const QString &msg) {
+        qDebug() << "LyricsFetcher error:" << msg;
+    });
+
     static bool sdlInited = false;
     if (!sdlInited) {
         SDL_Init(SDL_INIT_AUDIO);
@@ -58,10 +70,12 @@ void PlayerController::playFile(const QString &filePath)
     emit durationChanged();
 
     title_ = extractTitle(localPath);
+    parseFileName(localPath, title_, artist_);
     emit titleChanged();
 
-    // 加载歌词文件
+    // 加载本地歌词，然后用网易云 API 获取匹配的歌词替换
     lyrics_->setFilePath(localPath);
+    lyricsFetcher_->fetchLyrics(title_, artist_, duration_);
 
     // 每次播放新文件都必须重新打开 SDL 设备（确保音频规格匹配）
     audioOutput_.close();
@@ -253,4 +267,18 @@ void PlayerController::stopDecoding()
 QString PlayerController::extractTitle(const QString &filePath)
 {
     return QFileInfo(filePath).completeBaseName();
+}
+
+// 从文件名解析歌手和歌名，支持 "歌手 - 歌名" 格式
+void PlayerController::parseFileName(const QString &filePath, QString &title, QString &artist)
+{
+    QString baseName = QFileInfo(filePath).completeBaseName();
+    int sep = baseName.indexOf(" - ");
+    if (sep > 0) {
+        artist = baseName.left(sep).trimmed();
+        title = baseName.mid(sep + 3).trimmed();
+    } else {
+        artist.clear();
+        title = baseName.trimmed();
+    }
 }

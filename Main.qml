@@ -179,20 +179,30 @@ ApplicationWindow {
                         width: lyricsView.width
                         height: 36
 
-                        Label {
+                        property int lineIdx: index
+                        property int activeLine: lyricsView.activeIndex
+                        property bool isActive: lineIdx === activeLine
+                        property int activeChar: isActive ? player.lyrics.charIndexAt(player.position, activeLine) : -1
+
+                        Row {
                             anchors.centerIn: parent
-                            width: parent.width - 20
-                            horizontalAlignment: Text.AlignHCenter
-                            text: player.lyrics.textAt(index) || ""
-                            color: index === lyricsView.activeIndex ? "#1db954" : "#666666"
-                            font.pixelSize: index === lyricsView.activeIndex ? 18 : 14
-                            font.bold: index === lyricsView.activeIndex
-                            wrapMode: Text.Wrap
+                            spacing: 0
+
+                            Repeater {
+                                model: player.lyrics.textAt(lineIdx) || ""
+
+                                Label {
+                                    text: modelData
+                                    color: (isActive && index <= activeChar) ? "#1db954" : "#666666"
+                                    font.pixelSize: isActive ? 18 : 14
+                                    font.bold: isActive && index <= activeChar
+                                }
+                            }
                         }
 
                         TapHandler {
                             cursorShape: Qt.PointingHandCursor
-                            onTapped: player.seek(player.lyrics.timeAt(index))
+                            onTapped: player.seek(player.lyrics.timeAt(lineIdx))
                         }
                     }
 

@@ -7,6 +7,7 @@
 #include "sdl_audio_output.h"
 #include "ring_buffer.h"
 #include "lyrics_parser.h"
+#include "lyrics_fetcher.h"
 
 // 播放控制器：协调 AudioDecoder + RingBuffer + SDLAudioOutput，
 // 暴露 Q_PROPERTY / Q_INVOKABLE 给 QML 调用
@@ -74,24 +75,29 @@ private:
     // 从文件路径提取歌曲标题
     static QString extractTitle(const QString &filePath);
 
+    // 从文件路径解析歌手和歌名
+    static void parseFileName(const QString &filePath, QString &title, QString &artist);
+
     AudioDecoder decoder_;
-    RingBuffer ringBuf_{176400 * 2}; // 约 2 秒 PCM (44100*2*4=352800 bytes/sec)
+    RingBuffer ringBuf_{176400 * 2};
     SDLAudioOutput audioOutput_;
 
     QThread *decodeThread_ = nullptr;
     std::atomic<bool> decoding_{false};
 
-    QTimer posTimer_;            // 进度轮询定时器
-    QTimer seekTimer_;           // seek 防抖
-    double pendingSeekPos_ = -1; // 待 seek 位置（秒）
+    QTimer posTimer_;
+    QTimer seekTimer_;
+    double pendingSeekPos_ = -1;
     double duration_ = 0.0;
     double position_ = 0.0;
     bool playing_ = false;
     bool muted_ = false;
     float volumeBeforeMute_ = 1.0f;
     QString title_;
+    QString artist_;
     QString error_;
     LyricsParser *lyrics_;
-    QString currentAudioPath_;  // 当前播放的音频文件路径
-    qint64 startPts_ = 0; // 播放起始时间（ms），用于估算进度
+    LyricsFetcher *lyricsFetcher_;
+    QString currentAudioPath_;
+    qint64 startPts_ = 0;
 };
