@@ -50,6 +50,11 @@ void PlayerController::playFile(const QString &filePath)
     // 先停止当前播放
     if (playing_ || decoder_.isOpen()) { stop(); }
 
+    // 切换歌曲时重置倍速为 1.0
+    playbackSpeed_ = 1.0;
+    decodeSpeed_.store(1.0);
+    emit playbackSpeedChanged();
+
     // 将 file:/// URL 转为本地路径，处理中文等特殊字符
     QString localPath = filePath;
     if (localPath.startsWith("file://")) { localPath = QUrl(filePath).toLocalFile(); }
@@ -110,7 +115,7 @@ void PlayerController::togglePlay()
     } else {
         audioOutput_.play();
         playing_ = true;
-        startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(position_ * 1000);
+        startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(position_ / playbackSpeed_ * 1000);
         posTimer_.start();
     }
     emit playingChanged();
@@ -144,7 +149,7 @@ void PlayerController::seek(double pos)
 
     pendingSeekPos_ = pos;
     position_ = pos;
-    startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(pos * 1000);
+    startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(pos / playbackSpeed_ * 1000);
     emit positionChanged();
 
     seekTimer_.start();
@@ -171,7 +176,7 @@ void PlayerController::doSeek()
     startDecoding();
 
     position_ = pos;
-    startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(pos * 1000);
+    startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(pos / playbackSpeed_ * 1000);
 
     if (wasPlaying) {
         audioOutput_.play();
@@ -210,12 +215,29 @@ void PlayerController::toggleMute()
     setMuted(!muted_);
 }
 
-// 定时轮询进度：根据经过时间估算当前播放位置
+void PlayerController::setPlaybackSpeed(double speed)
+{
+    speed = std::clamp(speed, 0.25, 2.0);
+    if (qFuzzyCompare(playbackSpeed_, speed)) return;
+
+    playbackSpeed_ = speed;
+    decodeSpeed_.store(speed);
+
+    // 倍速变化后重新校准计时起点
+    if (playing_) {
+        startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(position_ / speed * 1000);
+    }
+
+    emit playbackSpeedChanged();
+    qDebug() << "Playback speed set to:" << speed;
+}
+
+// 定时轮询进度：经过时间 × 倍速 = 实际播放位置
 void PlayerController::onUpdatePosition()
 {
     if (!playing_) return;
     double elapsed = (QDateTime::currentMSecsSinceEpoch() - startPts_) / 1000.0;
-    position_ = qMin(elapsed, duration_);
+    position_ = qMin(elapsed * playbackSpeed_, duration_);
     emit positionChanged();
 
     // 播放完毕检测
@@ -225,24 +247,84 @@ void PlayerController::onUpdatePosition()
     }
 }
 
-// 启动解码线程：循环从 decoder 读取 PCM 写入 RingBuffer
+// 启动解码线程：循环从 decoder 读取 PCM → SpeedSwitch（变速不变调）→ RingBuffer → SDL 播放
 void PlayerController::startDecoding()
 {
+    // 在解码线程初始化 SpeedSwitch（FFmpeg atempo 滤镜）
+    const auto &fmt = decoder_.format();
+    speedSwitch_.init(fmt.sampleRate, fmt.channels);
+    speedSwitch_.setSpeed(decodeSpeed_.load());
+    ringBuf_.clear();
+
     decoding_.store(true);
     decodeThread_ = QThread::create([this]() {
         uint8_t buf[65536];
+        uint8_t stretchBuf[262144]; // 0.25x 时输出最多约 4 倍输入
+
         while (decoding_.load()) {
             int n = decoder_.readPCM(buf, sizeof(buf));
             if (n <= 0) {
+                // 文件结束，清空滤镜缓冲后标记 eof
+                float flushBuf[65536];
+                int flushed = speedSwitch_.flush(flushBuf, 65536);
+                if (flushed > 0) {
+                    size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
+                    size_t offset = 0;
+                    while (offset < toWrite && decoding_.load()) {
+                        size_t w = ringBuf_.write(
+                            reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
+                        if (w == 0) break;
+                        offset += w;
+                    }
+                }
                 ringBuf_.setEof(true);
                 break;
             }
-            // 写入环形缓冲区，满了则阻塞等待
-            size_t offset = 0;
-            while (offset < static_cast<size_t>(n) && decoding_.load()) {
-                size_t w = ringBuf_.write(buf + offset, static_cast<size_t>(n) - offset);
-                if (w == 0) break;
-                offset += w;
+
+            double targetSpeed = decodeSpeed_.load();
+            if (std::abs(targetSpeed - speedSwitch_.speed()) > 0.001) {
+                // 倍速已变：flush 旧滤镜，重建新滤镜
+                float flushBuf[65536];
+                int flushed = speedSwitch_.flush(flushBuf, 65536);
+                if (flushed > 0) {
+                    size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
+                    size_t offset = 0;
+                    while (offset < toWrite && decoding_.load()) {
+                        size_t w = ringBuf_.write(
+                            reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
+                        if (w == 0) break;
+                        offset += w;
+                    }
+                }
+                speedSwitch_.setSpeed(targetSpeed);
+            }
+
+            if (std::abs(targetSpeed - 1.0) < 0.005) {
+                // 1.0x：绕过拉伸直接写入
+                size_t offset = 0;
+                while (offset < static_cast<size_t>(n) && decoding_.load()) {
+                    size_t w = ringBuf_.write(buf + offset, static_cast<size_t>(n) - offset);
+                    if (w == 0) break;
+                    offset += w;
+                }
+                continue;
+            }
+
+            // 非 1.0x：经 atempo 拉伸后写入
+            int inSamples = n / static_cast<int>(sizeof(float));
+            int outSamples = speedSwitch_.process(
+                reinterpret_cast<const float *>(buf), inSamples,
+                reinterpret_cast<float *>(stretchBuf),
+                sizeof(stretchBuf) / static_cast<int>(sizeof(float)));
+
+            if (outSamples > 0) {
+                size_t toWrite = static_cast<size_t>(outSamples) * sizeof(float);
+                size_t offset = 0;
+                while (offset < toWrite && decoding_.load()) {
+                    size_t w = ringBuf_.write(stretchBuf + offset, toWrite - offset);
+                    if (w == 0) break;
+                    offset += w;
+                }
             }
         }
     });

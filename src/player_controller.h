@@ -5,6 +5,7 @@
 #include <QtQml/qqmlregistration.h>
 #include "audio_decoder.h"
 #include "sdl_audio_output.h"
+#include "speed_switch.h"
 #include "ring_buffer.h"
 #include "lyrics_parser.h"
 #include "lyrics_fetcher.h"
@@ -22,7 +23,8 @@ class PlayerController : public QObject
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorOccurred)
-    Q_PROPERTY(LyricsParser* lyrics READ lyrics CONSTANT)
+    Q_PROPERTY(LyricsParser *lyrics READ lyrics CONSTANT)
+    Q_PROPERTY(double playbackSpeed READ playbackSpeed WRITE setPlaybackSpeed NOTIFY playbackSpeedChanged)
 public:
     explicit PlayerController(QObject *parent = nullptr);
     ~PlayerController();
@@ -37,6 +39,8 @@ public:
     Q_INVOKABLE void seek(double pos);
     // 静音切换
     Q_INVOKABLE void toggleMute();
+    // 设置播放倍速
+    Q_INVOKABLE void setPlaybackSpeed(double speed);
 
     bool playing() const { return playing_; }
     double duration() const { return duration_; }
@@ -48,7 +52,8 @@ public:
     Q_INVOKABLE void setMuted(bool muted);
     QString title() const { return title_; }
     QString error() const { return error_; }
-    LyricsParser* lyrics() const { return lyrics_; }
+    LyricsParser *lyrics() const { return lyrics_; }
+    double playbackSpeed() const { return playbackSpeed_; }
 
 signals:
     void playingChanged();
@@ -60,6 +65,7 @@ signals:
     void errorOccurred(const QString &msg);
     // 当前曲目播放完毕
     void playbackFinished();
+    void playbackSpeedChanged();
 
 private slots:
     // 定时更新播放进度
@@ -81,6 +87,8 @@ private:
     AudioDecoder decoder_;
     RingBuffer ringBuf_{176400 * 2};
     SDLAudioOutput audioOutput_;
+    SpeedSwitch speedSwitch_;
+    std::atomic<double> decodeSpeed_{1.0};
 
     QThread *decodeThread_ = nullptr;
     std::atomic<bool> decoding_{false};
@@ -100,4 +108,5 @@ private:
     LyricsFetcher *lyricsFetcher_;
     QString currentAudioPath_;
     qint64 startPts_ = 0;
+    double playbackSpeed_ = 1.0; // 默认1倍速
 };

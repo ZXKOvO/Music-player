@@ -7,8 +7,7 @@
 
 LyricsParser::LyricsParser(QObject *parent)
     : QObject(parent)
-{
-}
+{}
 
 void LyricsParser::setFilePath(const QString &path)
 {
@@ -84,11 +83,9 @@ bool LyricsParser::parseYrcContent(const QString &content)
         int pos = 0;
         while (pos < rest.size()) {
             QRegularExpressionMatch wm = wordRe.match(rest, pos);
-            if (!wm.hasMatch()) {
-                break;
-            }
+            if (!wm.hasMatch()) { break; }
 
-            QString wordText = wm.captured(1);    // 括号前的文字（可能多字）
+            QString wordText = wm.captured(1);           // 括号前的文字（可能多字）
             double wStartMs = wm.captured(2).toDouble(); // 字开始时间(ms)
             double wDurMs = wm.captured(3).toDouble();   // 字持续时间(ms)
 
@@ -108,9 +105,7 @@ bool LyricsParser::parseYrcContent(const QString &content)
         }
 
         // 数据一致性检查：charInfos 数量应等于 text 字符数
-        if (li.charInfos.size() != li.text.length()) {
-            li.charInfos.clear();
-        }
+        if (li.charInfos.size() != li.text.length()) { li.charInfos.clear(); }
 
         lines_.append(li);
     }
@@ -167,18 +162,15 @@ bool LyricsParser::loadFromString(const QString &lrcContent)
     }
 
     // 按时间排序
-    std::sort(lines_.begin(), lines_.end(),
-              [](const LineInfo &a, const LineInfo &b) {
-                  return a.startSec < b.startSec;
-              });
+    std::sort(lines_.begin(), lines_.end(), [](const LineInfo &a, const LineInfo &b) {
+        return a.startSec < b.startSec;
+    });
 
     // 计算每行持续时间（下一行开始时间 - 当前行开始时间）
     for (int i = 0; i < lines_.size() - 1; i++) {
         lines_[i].durationSec = lines_[i + 1].startSec - lines_[i].startSec;
     }
-    if (!lines_.isEmpty()) {
-        lines_.last().durationSec = 3.0;
-    }
+    if (!lines_.isEmpty()) { lines_.last().durationSec = 3.0; }
 
     // LRC 模式：按字数均分生成 charInfos（等分时间，非真正逐字）
     for (auto &line : lines_) {
@@ -271,9 +263,7 @@ int LyricsParser::charIndexAt(double seconds, int lineIndex) const
     if (!line.charInfos.isEmpty() && line.charInfos.size() == charCount) {
         int best = -1;
         for (int i = 0; i < charCount; i++) {
-            if (seconds >= line.charInfos[i].startSec) {
-                best = i;
-            }
+            if (seconds >= line.charInfos[i].startSec) { best = i; }
         }
         return best;
     }
@@ -295,9 +285,7 @@ QString LyricsParser::guessLrcPath(const QString &audioPath)
     QString dir = fi.absolutePath();
     QString lrcPath = dir + "/" + baseName + ".lrc";
 
-    if (QFile::exists(lrcPath)) {
-        return lrcPath;
-    }
+    if (QFile::exists(lrcPath)) { return lrcPath; }
 
     return QString();
 }

@@ -415,6 +415,84 @@ ApplicationWindow {
 
                 Item { Layout.preferredWidth: 4 }
 
+                // 倍速切换按钮（竖三点图标，点击弹出滑块）
+                Button {
+                    id: speedBtn
+                    visible: player.title !== ""
+                    implicitWidth: 32
+                    implicitHeight: 28
+                    onClicked: speedPopup.open()
+                    contentItem: Label {
+                        text: "\u22EE"
+                        color: "#ffffff"
+                        font.pixelSize: 18
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: speedBtn.hovered ? "#444444" : "transparent"
+                        radius: 4
+                    }
+                    Popup {
+                        id: speedPopup
+                        y: -height - 8
+                        x: (parent.width - width) / 2
+                        padding: 12
+                        background: Rectangle {
+                            color: "#2a2a2a"
+                            radius: 8
+                            border.color: "#444444"
+                            border.width: 1
+                        }
+                        contentItem: ColumnLayout {
+                            spacing: 8
+                            Label {
+                                text: player.playbackSpeed.toFixed(1) + "x"
+                                color: "#ffffff"
+                                font.pixelSize: 14
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                Layout.fillWidth: true
+                            }
+                            Slider {
+                                id: speedSlider
+                                from: 0.5
+                                to: 2.0
+                                stepSize: 0.1
+                                value: player.playbackSpeed
+                                Layout.preferredWidth: 160
+                                onValueChanged: {
+                                    if (pressed) player.setPlaybackSpeed(value)
+                                }
+                                background: Rectangle {
+                                    x: speedSlider.leftPadding
+                                    y: speedSlider.topPadding + speedSlider.availableHeight / 2 - height / 2
+                                    implicitHeight: 4
+                                    width: speedSlider.availableWidth
+                                    height: implicitHeight
+                                    radius: 2
+                                    color: "#555555"
+                                    Rectangle {
+                                        width: speedSlider.visualPosition * parent.width
+                                        height: parent.height
+                                        color: "#1db954"
+                                        radius: 2
+                                    }
+                                }
+                                handle: Rectangle {
+                                    x: speedSlider.leftPadding + speedSlider.visualPosition * (speedSlider.availableWidth - width)
+                                    y: speedSlider.topPadding + speedSlider.availableHeight / 2 - height / 2
+                                    implicitWidth: 16
+                                    implicitHeight: 16
+                                    radius: 8
+                                    color: speedSlider.pressed ? "#1ed760" : "#ffffff"
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Mute button
                 Button {
                     text: qsTr("Mute")
