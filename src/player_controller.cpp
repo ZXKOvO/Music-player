@@ -224,9 +224,7 @@ void PlayerController::setPlaybackSpeed(double speed)
     decodeSpeed_.store(speed);
 
     // 倍速变化后重新校准计时起点
-    if (playing_) {
-        startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(position_ / speed * 1000);
-    }
+    if (playing_) { startPts_ = QDateTime::currentMSecsSinceEpoch() - static_cast<qint64>(position_ / speed * 1000); }
 
     emit playbackSpeedChanged();
     qDebug() << "Playback speed set to:" << speed;
@@ -271,8 +269,7 @@ void PlayerController::startDecoding()
                     size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
                     size_t offset = 0;
                     while (offset < toWrite && decoding_.load()) {
-                        size_t w = ringBuf_.write(
-                            reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
+                        size_t w = ringBuf_.write(reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
                         if (w == 0) break;
                         offset += w;
                     }
@@ -290,8 +287,7 @@ void PlayerController::startDecoding()
                     size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
                     size_t offset = 0;
                     while (offset < toWrite && decoding_.load()) {
-                        size_t w = ringBuf_.write(
-                            reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
+                        size_t w = ringBuf_.write(reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
                         if (w == 0) break;
                         offset += w;
                     }
@@ -312,10 +308,10 @@ void PlayerController::startDecoding()
 
             // 非 1.0x：经 atempo 拉伸后写入
             int inSamples = n / static_cast<int>(sizeof(float));
-            int outSamples = speedSwitch_.process(
-                reinterpret_cast<const float *>(buf), inSamples,
-                reinterpret_cast<float *>(stretchBuf),
-                sizeof(stretchBuf) / static_cast<int>(sizeof(float)));
+            int outSamples = speedSwitch_.process(reinterpret_cast<const float *>(buf),
+                                                  inSamples,
+                                                  reinterpret_cast<float *>(stretchBuf),
+                                                  sizeof(stretchBuf) / static_cast<int>(sizeof(float)));
 
             if (outSamples > 0) {
                 size_t toWrite = static_cast<size_t>(outSamples) * sizeof(float);

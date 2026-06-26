@@ -29,8 +29,7 @@ public:
     void setSpeed(double speed);
 
     // 输入 PCM ，返回输出样本数
-    int process(const float *input, int inputSamples,
-                float *outputBuf, int outputBufSize);
+    int process(const float *input, int inputSamples, float *outputBuf, int outputBufSize);
 
     // 发送 NULL 帧清空滤镜内部缓冲，返回剩余样本数
     int flush(float *outputBuf, int outputBufSize);

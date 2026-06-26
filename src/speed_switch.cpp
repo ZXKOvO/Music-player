@@ -6,11 +6,17 @@
 
 SpeedSwitch::SpeedSwitch() {}
 
-SpeedSwitch::~SpeedSwitch() { close(); }
+SpeedSwitch::~SpeedSwitch()
+{
+    close();
+}
 
 void SpeedSwitch::close()
 {
-    if (graph_) { avfilter_graph_free(&graph_); graph_ = nullptr; }
+    if (graph_) {
+        avfilter_graph_free(&graph_);
+        graph_ = nullptr;
+    }
     srcCtx_ = nullptr;
     sinkCtx_ = nullptr;
     curSpeed_ = 1.0;
@@ -77,20 +83,27 @@ bool SpeedSwitch::buildFilter(double speed)
     av_channel_layout_default(&layout, channels_);
 
     char srcArgs[512];
-    snprintf(srcArgs, sizeof(srcArgs),
+    snprintf(srcArgs,
+             sizeof(srcArgs),
              "sample_rate=%d:sample_fmt=flt:channel_layout=0x%llx",
-             sampleRate_, (unsigned long long)layout.u.mask);
+             sampleRate_,
+             (unsigned long long) layout.u.mask);
 
     int err = avfilter_graph_create_filter(&srcCtx_, src, "src", srcArgs, nullptr, graph_);
-    if (err < 0) { qWarning() << "SpeedSwitch: create abuffer failed" << err; return false; }
+    if (err < 0) {
+        qWarning() << "SpeedSwitch: create abuffer failed" << err;
+        return false;
+    }
 
     err = avfilter_graph_create_filter(&sinkCtx_, sink, "sink", nullptr, nullptr, graph_);
-    if (err < 0) { qWarning() << "SpeedSwitch: create abuffersink failed" << err; return false; }
+    if (err < 0) {
+        qWarning() << "SpeedSwitch: create abuffersink failed" << err;
+        return false;
+    }
 
     // 强制 sink 输出 packed float32，避免 atempo 输出 planar 导致数据错位
-    AVSampleFormat sampleFmts[] = { AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_NONE };
-    av_opt_set_int_list(sinkCtx_, "sample_fmts", (const int *)sampleFmts,
-                        AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
+    AVSampleFormat sampleFmts[] = {AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_NONE};
+    av_opt_set_int_list(sinkCtx_, "sample_fmts", (const int *) sampleFmts, AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
 
     AVFilterInOut *outputs = avfilter_inout_alloc();
     AVFilterInOut *inputs = avfilter_inout_alloc();
@@ -110,10 +123,16 @@ bool SpeedSwitch::buildFilter(double speed)
     avfilter_inout_free(&inputs);
     avfilter_inout_free(&outputs);
 
-    if (err < 0) { qWarning() << "SpeedSwitch: parse failed" << err; return false; }
+    if (err < 0) {
+        qWarning() << "SpeedSwitch: parse failed" << err;
+        return false;
+    }
 
     err = avfilter_graph_config(graph_, nullptr);
-    if (err < 0) { qWarning() << "SpeedSwitch: config failed" << err; return false; }
+    if (err < 0) {
+        qWarning() << "SpeedSwitch: config failed" << err;
+        return false;
+    }
 
     curSpeed_ = speed;
     ready_ = true;
@@ -123,15 +142,12 @@ bool SpeedSwitch::buildFilter(double speed)
 void SpeedSwitch::setSpeed(double speed)
 {
     speed = std::clamp(speed, 0.5, 2.0);
-    if (std::abs(speed - curSpeed_) > 0.001) {
-        buildFilter(speed);
-    }
+    if (std::abs(speed - curSpeed_) > 0.001) { buildFilter(speed); }
 }
 
 // 将 PCM 送入 atempo 滤镜并取出拉伸后的输出
 // 返回输出缓冲中的 float 样本数
-int SpeedSwitch::process(const float *input, int inputSamples,
-                           float *outputBuf, int outputBufSize)
+int SpeedSwitch::process(const float *input, int inputSamples, float *outputBuf, int outputBufSize)
 {
     if (!ready_) return 0;
     if (inputSamples <= 0) return 0;
@@ -142,7 +158,7 @@ int SpeedSwitch::process(const float *input, int inputSamples,
 
     AVFrame *inFrame = av_frame_alloc();
 
-    for (int pos = 0; pos < inputSamples; ) {
+    for (int pos = 0; pos < inputSamples;) {
         int chunk = std::min(feedWindow, inputSamples - pos);
         chunk = (chunk / channels) * channels;
         if (chunk <= 0) break;
@@ -177,7 +193,7 @@ int SpeedSwitch::process(const float *input, int inputSamples,
                 if (totalOut + outSamples <= outputBufSize) {
                     float *dst = outputBuf + totalOut;
                     for (int ch = 0; ch < channels; ++ch) {
-                        const float *src = (const float *)outFrame->extended_data[ch];
+                        const float *src = (const float *) outFrame->extended_data[ch];
                         for (int s = 0; s < frames; ++s) {
                             dst[s * channels + ch] = src[s];
                         }
@@ -187,8 +203,7 @@ int SpeedSwitch::process(const float *input, int inputSamples,
             } else {
                 outSamples = outFrame->nb_samples * channels;
                 if (totalOut + outSamples <= outputBufSize) {
-                    std::memcpy(outputBuf + totalOut, outFrame->data[0],
-                                outSamples * sizeof(float));
+                    std::memcpy(outputBuf + totalOut, outFrame->data[0], outSamples * sizeof(float));
                     totalOut += outSamples;
                 }
             }
@@ -226,7 +241,7 @@ int SpeedSwitch::flush(float *outputBuf, int outputBufSize)
             if (totalOut + outSamples <= outputBufSize) {
                 float *dst = outputBuf + totalOut;
                 for (int ch = 0; ch < channels; ++ch) {
-                    const float *src = (const float *)outFrame->extended_data[ch];
+                    const float *src = (const float *) outFrame->extended_data[ch];
                     for (int s = 0; s < frames; ++s) {
                         dst[s * channels + ch] = src[s];
                     }
@@ -236,8 +251,7 @@ int SpeedSwitch::flush(float *outputBuf, int outputBufSize)
         } else {
             outSamples = outFrame->nb_samples * channels;
             if (totalOut + outSamples <= outputBufSize) {
-                std::memcpy(outputBuf + totalOut, outFrame->data[0],
-                            outSamples * sizeof(float));
+                std::memcpy(outputBuf + totalOut, outFrame->data[0], outSamples * sizeof(float));
                 totalOut += outSamples;
             }
         }
