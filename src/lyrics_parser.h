@@ -6,16 +6,18 @@
 #include <QtQml/qqmlregistration.h>
 
 // 单个字符的时间信息（用于逐字高亮）
-struct CharInfo {
+struct CharInfo
+{
     double startSec;    // 该字符开始显示的时间（秒）
     double durationSec; // 该字符持续显示的时间（秒）
 };
 
 // 单行歌词的信息
-struct LineInfo {
-    double startSec;    // 行开始时间（秒）
-    double durationSec; // 行持续时间（秒）
-    QString text;       // 行内歌词文本
+struct LineInfo
+{
+    double startSec;             // 行开始时间（秒）
+    double durationSec;          // 行持续时间（秒）
+    QString text;                // 行内歌词文本
     QVector<CharInfo> charInfos; // 每个字符的时间信息（逐字模式下有值）
 };
 

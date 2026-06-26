@@ -10,12 +10,13 @@ find_package(PkgConfig REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.9)
 
-# 第三方依赖：FFmpeg
+# 第三方依赖：FFmpeg（含 avfilter 用于 atempo 变速不变调）
 pkg_check_modules(AV REQUIRED
     libavcodec
     libavformat
     libavutil
     libswresample
+    libavfilter
 )
 
 # 第三方依赖：SDL2
@@ -34,6 +35,8 @@ qt_add_qml_module(MusicPlayer
         src/ring_buffer.cpp
         src/sdl_audio_output.h
         src/sdl_audio_output.cpp
+        src/speed_switch.h
+        src/speed_switch.cpp
         src/player_controller.h
         src/player_controller.cpp
         src/playlist_model.h
@@ -42,8 +45,15 @@ qt_add_qml_module(MusicPlayer
         src/lyrics_parser.cpp
         src/lyrics_fetcher.h
         src/lyrics_fetcher.cpp
+        src/playlist_manager.h   # 歌单管理器
+        src/playlist_manager.cpp
     QML_FILES
         Main.qml
+        qml/pages/PlaylistPage.qml
+        qml/pages/PlaylistsPage.qml
+        qml/pages/PlaylistDetailPage.qml
+        qml/pages/LyricsPage.qml
+        qml/components/ControlBar.qml
 )
 
 target_include_directories(MusicPlayer PRIVATE

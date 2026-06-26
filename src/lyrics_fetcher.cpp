@@ -27,8 +27,7 @@ static void log(const QString &msg)
 LyricsFetcher::LyricsFetcher(QObject *parent)
     : QObject(parent)
     , netMgr_(new QNetworkAccessManager(this))
-{
-}
+{}
 
 void LyricsFetcher::fetchLyrics(const QString &title, const QString &artist, double audioDurationSec)
 {
@@ -58,7 +57,10 @@ void LyricsFetcher::fetchLyrics(const QString &title, const QString &artist, dou
     });
 }
 
-void LyricsFetcher::onSearchFinished(QNetworkReply *reply, const QString &title, const QString &artist, double audioDurationSec)
+void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
+                                     const QString &title,
+                                     const QString &artist,
+                                     double audioDurationSec)
 {
     reply->deleteLater();
 
@@ -93,7 +95,8 @@ void LyricsFetcher::onSearchFinished(QNetworkReply *reply, const QString &title,
         int id = song.value("id").toInt();
         double songDurationSec = song.value("duration").toInt() / 1000.0;
 
-        log("  Candidate: " + songName + " id=" + QString::number(id) + " dur=" + QString::number(songDurationSec) + "s");
+        log("  Candidate: " + songName + " id=" + QString::number(id) + " dur=" + QString::number(songDurationSec)
+            + "s");
 
         if (songName == title) {
             if (audioDurationSec > 0) {
@@ -146,8 +149,8 @@ void LyricsFetcher::fetchLyricById(int songId, const QString &songName)
     QUrl url("https://music.163.com/api/song/lyric");
     QUrlQuery params;
     params.addQueryItem("id", QString::number(songId));
-    params.addQueryItem("lv", "1");   // 请求逐行歌词
-    params.addQueryItem("yrc", "1");  // 请求逐字歌词
+    params.addQueryItem("lv", "1");  // 请求逐行歌词
+    params.addQueryItem("yrc", "1"); // 请求逐字歌词
     url.setQuery(params);
 
     log("Fetching lyric: " + url.toString());
