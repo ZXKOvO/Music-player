@@ -322,6 +322,17 @@ ApplicationWindow {
                                                 window.leftView = "playlistDetail"
                                                 leftStackView.push(playlistDetailView)
                                             }
+                                            onTapped: {
+                                                playlistManager.currentPlaylistIndex = index
+                                                // 将该歌单所有歌曲加入播放列表
+                                                var count = playlistManager.playlistSongCount(index)
+                                                for (var i = 0; i < count; i++) {
+                                                    var path = playlistManager.songFilePath(index, i)
+                                                    if (!playlistModel.contains(path)) {
+                                                        playlistModel.addFile(path)
+                                                    }
+                                                }
+                                            }
                                         }
 
                                         HoverHandler {
