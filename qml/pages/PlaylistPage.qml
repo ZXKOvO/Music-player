@@ -79,6 +79,34 @@ ColumnLayout {
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
+
+                Button {
+                    flat: true
+                    implicitWidth: 28
+                    implicitHeight: 28
+                    visible: hoverHandler.hovered
+                    onClicked: {
+                        var removedIndex = index
+                        playlistModel.remove(removedIndex)
+                        if (removedIndex === window.currentIndex) {
+                            player.stop()
+                            window.currentIndex = -1
+                        } else if (removedIndex < window.currentIndex) {
+                            window.currentIndex--
+                        }
+                    }
+                    contentItem: Label {
+                        text: "\u2715"
+                        color: "#cc0000"
+                        font.pixelSize: 12
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "#ffe0e0" : "transparent"
+                        radius: 4
+                    }
+                }
             }
         }
 
