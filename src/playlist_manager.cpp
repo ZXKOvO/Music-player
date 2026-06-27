@@ -1,9 +1,16 @@
 #include "playlist_manager.h"
+#include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
 
 PlaylistManager::PlaylistManager(QObject *parent)
     : QAbstractListModel(parent)
 {
+    loadFromFile();
 }
 
 // 创建新歌单
@@ -42,9 +49,7 @@ void PlaylistManager::renamePlaylist(int index, const QString &newName)
     playlists_[index].name = newName;
     QModelIndex idx = createIndex(index, 0);
     emit dataChanged(idx, idx, {NameRole});
-    if (currentPlaylistIndex_ == index) {
-        emit currentPlaylistIndexChanged();
-    }
+    if (currentPlaylistIndex_ == index) { emit currentPlaylistIndexChanged(); }
     saveToFile();
 }
 
@@ -164,21 +169,70 @@ QVariant PlaylistManager::data(const QModelIndex &index, int role) const
 
 QHash<int, QByteArray> PlaylistManager::roleNames() const
 {
-    return {
-        {NameRole, "name"},
-        {SongCountRole, "songCount"}
-    };
-}
-
-void PlaylistManager::saveToFile()
-{
-}
-
-void PlaylistManager::loadFromFile()
-{
+    return {{NameRole, "name"}, {SongCountRole, "songCount"}};
 }
 
 QString PlaylistManager::savePath() const
 {
-    return {};
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/playlists.json";
+}
+
+void PlaylistManager::saveToFile()
+{
+    QJsonArray playlistsArray;
+    for (const auto &pl : playlists_) {
+        QJsonObject plObj;
+        plObj["name"] = pl.name;
+        QJsonArray songsArray;
+        for (const auto &song : pl.songs) {
+            QJsonObject songObj;
+            songObj["filePath"] = song.filePath;
+            songObj["title"] = song.title;
+            songsArray.append(songObj);
+        }
+        plObj["songs"] = songsArray;
+        playlistsArray.append(plObj);
+    }
+    QJsonObject root;
+    root["playlists"] = playlistsArray;
+    QJsonDocument doc(root);
+    QString path = savePath();
+    QFileInfo(path).absoluteDir().mkpath(".");
+    QFile file(path);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(doc.toJson(QJsonDocument::Indented));
+    }
+}
+
+void PlaylistManager::loadFromFile()
+{
+    QFile file(savePath());
+    if (!file.exists() || !file.open(QIODevice::ReadOnly)) return;
+    QByteArray data = file.readAll();
+    file.close();
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError || !doc.isObject()) return;
+    QJsonObject root = doc.object();
+    QJsonArray playlistsArray = root["playlists"].toArray();
+    beginResetModel();
+    playlists_.clear();
+    for (const auto &plVal : playlistsArray) {
+        QJsonObject plObj = plVal.toObject();
+        UserPlaylist pl;
+        pl.name = plObj["name"].toString();
+        QJsonArray songsArray = plObj["songs"].toArray();
+        for (const auto &songVal : songsArray) {
+            QJsonObject songObj = songVal.toObject();
+            Song s;
+            s.filePath = songObj["filePath"].toString();
+            s.title = songObj["title"].toString();
+            pl.songs.append(s);
+        }
+        playlists_.append(pl);
+    }
+    endResetModel();
+    if (!playlists_.isEmpty()) {
+        emit countChanged();
+    }
 }

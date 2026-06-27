@@ -35,7 +35,8 @@ void LyricsFetcher::fetchLyrics(const QString &title, const QString &artist, dou
     QString query = title;
     if (!artist.isEmpty()) query += " " + artist;
 
-    log("=== fetchLyrics start: title=" + title + " artist=" + artist + " dur=" + QString::number(audioDurationSec) + " reqId=" + QString::number(id));
+    log("=== fetchLyrics start: title=" + title + " artist=" + artist + " dur=" + QString::number(audioDurationSec)
+        + " reqId=" + QString::number(id));
 
     QUrl url("https://music.163.com/api/search/get");
     QUrlQuery params;

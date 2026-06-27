@@ -19,7 +19,11 @@ signals:
     void errorOccurred(const QString &msg);
 
 private:
-    void onSearchFinished(QNetworkReply *reply, const QString &title, const QString &artist, double audioDurationSec, int requestId);
+    void onSearchFinished(QNetworkReply *reply,
+                          const QString &title,
+                          const QString &artist,
+                          double audioDurationSec,
+                          int requestId);
     void fetchLyricById(int songId, const QString &songName, int requestId);
 
     QNetworkAccessManager *netMgr_;
