@@ -85,16 +85,7 @@ ColumnLayout {
                     implicitWidth: 28
                     implicitHeight: 28
                     visible: hoverHandler.hovered
-                    onClicked: {
-                        var removedIndex = index
-                        playlistModel.remove(removedIndex)
-                        if (removedIndex === window.currentIndex) {
-                            player.stop()
-                            window.currentIndex = -1
-                        } else if (removedIndex < window.currentIndex) {
-                            window.currentIndex--
-                        }
-                    }
+                    onClicked: removeSongFromPlaylistDialog.openWithIndex(index)
                     contentItem: Label {
                         text: "\u2715"
                         color: "#cc0000"
@@ -134,10 +125,76 @@ ColumnLayout {
             color: parent.hovered ? "#e8e8e8" : "transparent"
             radius: 4
         }
-        onClicked: {
+        onClicked: clearPlaylistDialog.open()
+    }
+
+    // Remove song confirmation dialog
+    Dialog {
+        id: removeSongFromPlaylistDialog
+        title: qsTr("移除歌曲")
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 320
+
+        property int targetIndex: -1
+
+        function openWithIndex(idx) {
+            targetIndex = idx
+            open()
+        }
+
+        onAccepted: {
+            if (targetIndex >= 0) {
+                var removedIndex = targetIndex
+                playlistModel.remove(removedIndex)
+                if (removedIndex === window.currentIndex) {
+                    player.stop()
+                    window.currentIndex = -1
+                } else if (removedIndex < window.currentIndex) {
+                    window.currentIndex--
+                }
+                targetIndex = -1
+            }
+        }
+        onRejected: targetIndex = -1
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("确定要从播放列表中移除这首歌曲吗？")
+                color: "#000000"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+    }
+
+    // Clear playlist confirmation dialog
+    Dialog {
+        id: clearPlaylistDialog
+        title: qsTr("清空播放列表")
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 320
+
+        onAccepted: {
             playlistModel.clear()
             window.currentIndex = -1
             player.stop()
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("确定要清空播放列表吗？\n所有歌曲将被移除。")
+                color: "#000000"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
         }
     }
 }

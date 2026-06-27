@@ -117,7 +117,7 @@ ColumnLayout {
                     implicitWidth: 28
                     implicitHeight: 28
                     visible: dtHover.hovered
-                    onClicked: playlistManager.removeSongFromCurrentPlaylist(songIndex)
+                    onClicked: removeSongConfirmDialog.openWithIndex(songIndex)
                     contentItem: Label {
                         text: "\u2715"
                         color: "#cc0000"
@@ -188,6 +188,42 @@ ColumnLayout {
             background: Rectangle {
                 color: parent.hovered ? "#e8f5e9" : "transparent"
                 radius: 4
+            }
+        }
+    }
+
+    // Remove song confirmation dialog
+    Dialog {
+        id: removeSongConfirmDialog
+        title: qsTr("移除歌曲")
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 320
+
+        property int targetIndex: -1
+
+        function openWithIndex(idx) {
+            targetIndex = idx
+            open()
+        }
+
+        onAccepted: {
+            if (targetIndex >= 0) {
+                playlistManager.removeSongFromCurrentPlaylist(targetIndex)
+                targetIndex = -1
+            }
+        }
+        onRejected: targetIndex = -1
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("确定要从歌单中移除这首歌曲吗？")
+                color: "#000000"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
             }
         }
     }

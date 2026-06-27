@@ -114,7 +114,7 @@ ColumnLayout {
                     flat: true
                     implicitWidth: 28
                     implicitHeight: 28
-                    onClicked: playlistManager.deletePlaylist(index)
+                    onClicked: deletePlaylistConfirmDialog.openWithIndex(index, name)
                     contentItem: Label {
                         text: "\u2715"
                         color: "#cc0000"
@@ -147,6 +147,48 @@ ColumnLayout {
 
         ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AsNeeded
+        }
+    }
+
+    // Delete playlist confirmation dialog
+    Dialog {
+        id: deletePlaylistConfirmDialog
+        title: qsTr("删除歌单")
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 320
+
+        property int targetIndex: -1
+        property string playlistName: ""
+
+        function openWithIndex(idx, name) {
+            targetIndex = idx
+            playlistName = name
+            open()
+        }
+
+        onAccepted: {
+            if (targetIndex >= 0) {
+                playlistManager.deletePlaylist(targetIndex)
+                targetIndex = -1
+                playlistName = ""
+            }
+        }
+        onRejected: {
+            targetIndex = -1
+            playlistName = ""
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("确定要删除歌单「") + deletePlaylistConfirmDialog.playlistName + qsTr("」吗？\n删除后歌单内的歌曲将无法恢复。")
+                color: "#000000"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
         }
     }
 }
