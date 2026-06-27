@@ -54,6 +54,13 @@ qt_add_qml_module(MusicPlayer
         qml/pages/PlaylistDetailPage.qml
         qml/pages/LyricsPage.qml
         qml/components/ControlBar.qml
+    RESOURCES
+        resources/icons/add.svg
+        resources/icons/shuffle.svg
+        resources/icons/repeat.svg
+        resources/icons/repeat-one.svg
+        resources/icons/volume.svg
+        resources/icons/volume-mute.svg
 )
 
 target_include_directories(MusicPlayer PRIVATE

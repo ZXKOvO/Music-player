@@ -24,65 +24,125 @@ Rectangle {
         spacing: 10
 
         Button {
-            text: qsTr("+ Add")
+            implicitWidth: 28
+            implicitHeight: 28
             onClicked: fileDialog.open()
-            contentItem: Label {
-                text: qsTr("添加歌曲")
-                color: "#ffffff"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Item {
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/qt/qml/MusicPlayer/resources/icons/add.svg"
+                    sourceSize.width: 18
+                    sourceSize.height: 18
+                }
             }
             background: Rectangle {
-                color: parent.hovered ? "#444444" : "#333333"
+                color: parent.hovered ? "#444444" : "transparent"
                 radius: 4
             }
         }
 
+        // 上一首：|◀
         Button {
-            text: qsTr("上一首")
+            implicitWidth: 24
+            implicitHeight: 24
             onClicked: playPrevious()
-            contentItem: Label {
-                text: qsTr("上一首")
-                color: "#ffffff"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Item {
+                Canvas {
+                    anchors.centerIn: parent
+                    width: 18
+                    height: 18
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.fillStyle = "#ffffff"
+                        ctx.globalAlpha = 0.85
+                        // 竖线
+                        ctx.fillRect(1, 3, 2, 12)
+                        // 左三角
+                        ctx.beginPath()
+                        ctx.moveTo(16, 3)
+                        ctx.lineTo(6, 9)
+                        ctx.lineTo(16, 15)
+                        ctx.closePath()
+                        ctx.fill()
+                    }
+                }
             }
             background: Rectangle {
-                color: parent.hovered ? "#444444" : "#333333"
+                color: parent.hovered ? "#444444" : "transparent"
                 radius: 4
             }
         }
 
+        // 播放/暂停：▶ / ❚❚
         Button {
-            text: player.playing ? qsTr("暂停") : qsTr("播放")
+            implicitWidth: 30
+            implicitHeight: 30
             onClicked: player.togglePlay()
-            contentItem: Label {
-                text: player.playing ? qsTr("暂停") : qsTr("播放")
-                color: "#ffffff"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Item {
+                Canvas {
+                    anchors.centerIn: parent
+                    width: 22
+                    height: 22
+                    property bool playing: player.playing
+                    onPlayingChanged: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.fillStyle = "#ffffff"
+                        ctx.globalAlpha = 0.85
+                        if (playing) {
+                            var barW = 3, gap = 4
+                            var totalW = barW * 2 + gap
+                            var startX = (22 - totalW) / 2
+                            ctx.fillRect(startX, 4, barW, 14)
+                            ctx.fillRect(startX + barW + gap, 4, barW, 14)
+                        } else {
+                            ctx.beginPath()
+                            ctx.moveTo(5, 2)
+                            ctx.lineTo(19, 11)
+                            ctx.lineTo(5, 20)
+                            ctx.closePath()
+                            ctx.fill()
+                        }
+                    }
+                }
             }
             background: Rectangle {
-                color: parent.hovered ? "#444444" : "#333333"
-                radius: 4
+                color: parent.hovered ? "#444444" : "transparent"
+                radius: 15
             }
         }
 
+        // 下一首：▶|
         Button {
-            text: qsTr("下一首")
+            implicitWidth: 24
+            implicitHeight: 24
             onClicked: playNext()
-            contentItem: Label {
-                text: qsTr("下一首")
-                color: "#ffffff"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Item {
+                Canvas {
+                    anchors.centerIn: parent
+                    width: 18
+                    height: 18
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.fillStyle = "#ffffff"
+                        ctx.globalAlpha = 0.85
+                        // 右三角
+                        ctx.beginPath()
+                        ctx.moveTo(2, 3)
+                        ctx.lineTo(12, 9)
+                        ctx.lineTo(2, 15)
+                        ctx.closePath()
+                        ctx.fill()
+                        // 竖线
+                        ctx.fillRect(15, 3, 2, 12)
+                    }
+                }
             }
             background: Rectangle {
-                color: parent.hovered ? "#444444" : "#333333"
+                color: parent.hovered ? "#444444" : "transparent"
                 radius: 4
             }
         }
@@ -104,23 +164,21 @@ Rectangle {
         }
 
         Button {
+            implicitWidth: 32
+            implicitHeight: 32
             onClicked: playlistModel.nextPlayMode()
-            contentItem: Label {
-                text: {
-                    switch (playlistModel.playMode) {
-                    case 0: return "顺序"
-                    case 1: return "单曲循环"
-                    case 2: return "随机"
-                    default: return "顺序"
-                    }
+            contentItem: Item {
+                Image {
+                    anchors.centerIn: parent
+                    source: playlistModel.playMode === 0 ? "qrc:/qt/qml/MusicPlayer/resources/icons/repeat.svg"
+                            : playlistModel.playMode === 1 ? "qrc:/qt/qml/MusicPlayer/resources/icons/repeat-one.svg"
+                            : "qrc:/qt/qml/MusicPlayer/resources/icons/shuffle.svg"
+                    sourceSize.width: 20
+                    sourceSize.height: 20
                 }
-                color: "#ffffff"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
             }
             background: Rectangle {
-                color: parent.hovered ? "#444444" : "#333333"
+                color: parent.hovered ? "#444444" : "transparent"
                 radius: 4
             }
         }
@@ -192,13 +250,13 @@ Rectangle {
         Button {
             id: speedBtn
             visible: player.title !== ""
-            implicitWidth: 32
+            implicitWidth: 36
             implicitHeight: 28
             onClicked: speedPopup.open()
             contentItem: Label {
-                text: "\u22EE"
-                color: "#ffffff"
-                font.pixelSize: 18
+                text: player.playbackSpeed.toFixed(1) + "x"
+                color: "#b3b3b3"
+                font.pixelSize: 12
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -292,17 +350,20 @@ Rectangle {
         }
 
         Button {
-            text: qsTr("Mute")
+            implicitWidth: 28
+            implicitHeight: 28
             onClicked: player.toggleMute()
-            contentItem: Label {
-                text: player.muted ? qsTr("Unmute") : qsTr("Mute")
-                color: "#ffffff"
-                font.pixelSize: 13
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Item {
+                Image {
+                    anchors.centerIn: parent
+                    source: player.muted ? "qrc:/qt/qml/MusicPlayer/resources/icons/volume-mute.svg"
+                                         : "qrc:/qt/qml/MusicPlayer/resources/icons/volume.svg"
+                    sourceSize.width: 18
+                    sourceSize.height: 18
+                }
             }
             background: Rectangle {
-                color: parent.hovered ? "#444444" : "#333333"
+                color: parent.hovered ? "#444444" : "transparent"
                 radius: 4
             }
         }
