@@ -31,10 +31,11 @@ LyricsFetcher::LyricsFetcher(QObject *parent)
 
 void LyricsFetcher::fetchLyrics(const QString &title, const QString &artist, double audioDurationSec)
 {
+    int id = ++requestId_;
     QString query = title;
     if (!artist.isEmpty()) query += " " + artist;
 
-    log("=== fetchLyrics start: title=" + title + " artist=" + artist + " dur=" + QString::number(audioDurationSec));
+    log("=== fetchLyrics start: title=" + title + " artist=" + artist + " dur=" + QString::number(audioDurationSec) + " reqId=" + QString::number(id));
 
     QUrl url("https://music.163.com/api/search/get");
     QUrlQuery params;
@@ -51,18 +52,24 @@ void LyricsFetcher::fetchLyrics(const QString &title, const QString &artist, dou
     req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
 
     QNetworkReply *reply = netMgr_->get(req);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, title, artist, audioDurationSec]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, title, artist, audioDurationSec, id]() {
         log("Search reply received, error=" + QString::number(reply->error()));
-        onSearchFinished(reply, title, artist, audioDurationSec);
+        onSearchFinished(reply, title, artist, audioDurationSec, id);
     });
 }
 
 void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
                                      const QString &title,
                                      const QString &artist,
-                                     double audioDurationSec)
+                                     double audioDurationSec,
+                                     int requestId)
 {
     reply->deleteLater();
+
+    if (requestId != requestId_.load()) {
+        log("Search discarded (stale request)");
+        return;
+    }
 
     if (reply->error() != QNetworkReply::NoError) {
         log("Search FAILED: " + reply->errorString());
@@ -136,7 +143,7 @@ void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
     }
 
     log("Selected: " + bestName + " id=" + QString::number(bestId));
-    fetchLyricById(bestId, bestName);
+    fetchLyricById(bestId, bestName, requestId);
 }
 
 // 根据歌曲 ID 获取歌词
@@ -144,7 +151,7 @@ void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
 // YRC 格式示例: [10140,3720]去(10140,120)到(10260,300)每(10560,150)
 //   - [startMs,durationMs] = 行级时间
 //   - 字(startMs,durationMs) = 字级时间
-void LyricsFetcher::fetchLyricById(int songId, const QString &songName)
+void LyricsFetcher::fetchLyricById(int songId, const QString &songName, int requestId)
 {
     QUrl url("https://music.163.com/api/song/lyric");
     QUrlQuery params;
@@ -159,8 +166,13 @@ void LyricsFetcher::fetchLyricById(int songId, const QString &songName)
     req.setRawHeader("Referer", "https://music.163.com/");
 
     QNetworkReply *reply = netMgr_->get(req);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, songName]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, songName, requestId]() {
         reply->deleteLater();
+
+        if (requestId != requestId_.load()) {
+            log("Lyric fetch discarded (stale request)");
+            return;
+        }
 
         if (reply->error() != QNetworkReply::NoError) {
             log("Lyric fetch FAILED: " + reply->errorString());

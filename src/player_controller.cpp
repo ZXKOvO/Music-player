@@ -3,6 +3,7 @@
 #include <QUrl>
 #include <QDebug>
 #include <SDL2/SDL.h>
+#include <QDateTime>
 
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
@@ -217,7 +218,7 @@ void PlayerController::toggleMute()
 
 void PlayerController::setPlaybackSpeed(double speed)
 {
-    speed = std::clamp(speed, 0.25, 2.0);
+    speed = std::clamp(speed, 0.5, 2.0);
     if (qFuzzyCompare(playbackSpeed_, speed)) return;
 
     playbackSpeed_ = speed;
@@ -257,7 +258,7 @@ void PlayerController::startDecoding()
     decoding_.store(true);
     decodeThread_ = QThread::create([this]() {
         uint8_t buf[65536];
-        uint8_t stretchBuf[262144]; // 0.25x 时输出最多约 4 倍输入
+        uint8_t stretchBuf[262144]; // 0.5x 时输出最多约 2 倍输入
 
         while (decoding_.load()) {
             int n = decoder_.readPCM(buf, sizeof(buf));
@@ -333,7 +334,11 @@ void PlayerController::stopDecoding()
     decoding_.store(false);
     ringBuf_.setEof(true); // 唤醒阻塞的写入线程
     if (decodeThread_) {
-        decodeThread_->wait(3000);
+        if (!decodeThread_->wait(5000)) {
+            qWarning() << "Decode thread did not stop within 5s, terminating...";
+            decodeThread_->terminate();
+            decodeThread_->wait(3000);
+        }
         delete decodeThread_;
         decodeThread_ = nullptr;
     }

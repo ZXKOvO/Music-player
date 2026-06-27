@@ -32,7 +32,7 @@ bool SpeedSwitch::init(int sampleRate, int channels)
 }
 
 // 构建 abuffer → atempo → abuffersink 滤镜图
-// atempo 原生范围 0.5~2.0，超出时链式串联多个滤镜
+// atempo 原生范围 0.5~2.0，超过 2.0 时链式串联多个滤镜
 bool SpeedSwitch::buildFilter(double speed)
 {
     if (graph_) avfilter_graph_free(&graph_);
@@ -42,19 +42,7 @@ bool SpeedSwitch::buildFilter(double speed)
     std::string filterDesc;
     double remaining = speed;
 
-    if (remaining < 0.5) {
-        while (remaining < 0.499) {
-            if (!filterDesc.empty()) filterDesc += ",";
-            filterDesc += "atempo=0.5";
-            remaining /= 0.5;
-        }
-        if (remaining < 0.999) {
-            if (!filterDesc.empty()) filterDesc += ",";
-            char buf[32];
-            snprintf(buf, sizeof(buf), "atempo=%.6f", remaining);
-            filterDesc += buf;
-        }
-    } else if (remaining > 2.0) {
+    if (remaining > 2.0) {
         while (remaining > 2.001) {
             if (!filterDesc.empty()) filterDesc += ",";
             filterDesc += "atempo=2.0";

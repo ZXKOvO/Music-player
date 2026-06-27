@@ -45,7 +45,10 @@ bool AudioDecoder::open(const QString &filePath)
     duration_ = fmtCtx_->streams[streamIdx_]->duration * av_q2d(fmtCtx_->streams[streamIdx_]->time_base);
 
     // 初始化重采样器，将任意输入格式转换为统一的 FLT32/44100Hz/双声道
-    initResampler();
+    if (!initResampler()) {
+        close();
+        return false;
+    }
     return true;
 }
 
@@ -76,6 +79,7 @@ bool AudioDecoder::initResampler()
 // 释放所有 FFmpeg 资源并重置状态
 void AudioDecoder::close()
 {
+    seeking_.store(false);
     // 按依赖逆序释放：重采样器 → 解码器 → 封装上下文
     if (swrCtx_) {
         swr_free(&swrCtx_);

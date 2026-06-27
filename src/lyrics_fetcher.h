@@ -3,6 +3,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QString>
+#include <atomic>
 
 class LyricsFetcher : public QObject
 {
@@ -18,8 +19,9 @@ signals:
     void errorOccurred(const QString &msg);
 
 private:
-    void onSearchFinished(QNetworkReply *reply, const QString &title, const QString &artist, double audioDurationSec);
-    void fetchLyricById(int songId, const QString &songName);
+    void onSearchFinished(QNetworkReply *reply, const QString &title, const QString &artist, double audioDurationSec, int requestId);
+    void fetchLyricById(int songId, const QString &songName, int requestId);
 
     QNetworkAccessManager *netMgr_;
+    std::atomic<int> requestId_{0};
 };
