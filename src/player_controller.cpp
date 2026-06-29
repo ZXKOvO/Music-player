@@ -68,16 +68,15 @@ void PlayerController::playFile(const QString &filePath)
         return;
     }
     error_.clear();
-    currentAudioPath_ = localPath;
     qDebug() << "Opened:" << localPath << "duration=" << decoder_.duration() << "rate=" << decoder_.format().sampleRate
              << "ch=" << decoder_.format().channels;
 
     duration_ = decoder_.duration();
     emit durationChanged();
 
-    title_ = extractTitle(localPath);
     parseFileName(localPath, title_, artist_);
     emit titleChanged();
+    emit artistChanged();
 
     // 加载本地歌词，然后用网易云 API 获取匹配的歌词替换
     lyrics_->setFilePath(localPath);
@@ -264,17 +263,7 @@ void PlayerController::startDecoding()
             int n = decoder_.readPCM(buf, sizeof(buf));
             if (n <= 0) {
                 // 文件结束，清空滤镜缓冲后标记 eof
-                float flushBuf[65536];
-                int flushed = speedSwitch_.flush(flushBuf, 65536);
-                if (flushed > 0) {
-                    size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
-                    size_t offset = 0;
-                    while (offset < toWrite && decoding_.load()) {
-                        size_t w = ringBuf_.write(reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
-                        if (w == 0) break;
-                        offset += w;
-                    }
-                }
+                flushFilterToRingBuf();
                 ringBuf_.setEof(true);
                 break;
             }
@@ -282,17 +271,7 @@ void PlayerController::startDecoding()
             double targetSpeed = decodeSpeed_.load();
             if (std::abs(targetSpeed - speedSwitch_.speed()) > 0.001) {
                 // 倍速已变：flush 旧滤镜，重建新滤镜
-                float flushBuf[65536];
-                int flushed = speedSwitch_.flush(flushBuf, 65536);
-                if (flushed > 0) {
-                    size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
-                    size_t offset = 0;
-                    while (offset < toWrite && decoding_.load()) {
-                        size_t w = ringBuf_.write(reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
-                        if (w == 0) break;
-                        offset += w;
-                    }
-                }
+                flushFilterToRingBuf();
                 speedSwitch_.setSpeed(targetSpeed);
             }
 
@@ -328,6 +307,22 @@ void PlayerController::startDecoding()
     decodeThread_->start();
 }
 
+// 刷新滤镜缓冲并写入 RingBuffer
+void PlayerController::flushFilterToRingBuf()
+{
+    float flushBuf[65536];
+    int flushed = speedSwitch_.flush(flushBuf, 65536);
+    if (flushed > 0) {
+        size_t toWrite = static_cast<size_t>(flushed) * sizeof(float);
+        size_t offset = 0;
+        while (offset < toWrite && decoding_.load()) {
+            size_t w = ringBuf_.write(reinterpret_cast<uint8_t *>(flushBuf) + offset, toWrite - offset);
+            if (w == 0) break;
+            offset += w;
+        }
+    }
+}
+
 // 停止解码线程
 void PlayerController::stopDecoding()
 {
@@ -344,12 +339,6 @@ void PlayerController::stopDecoding()
     }
     // 线程停止后再 clear，防止旧线程再次 setEof
     ringBuf_.clear();
-}
-
-// 从文件路径中提取不带扩展名的文件名作为标题
-QString PlayerController::extractTitle(const QString &filePath)
-{
-    return QFileInfo(filePath).completeBaseName();
 }
 
 // 从文件名解析歌手和歌名，支持 "歌手 - 歌名" 格式

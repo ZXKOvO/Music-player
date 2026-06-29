@@ -18,7 +18,6 @@ public:
     size_t read(uint8_t *data, size_t size);
 
     size_t readable() const; // 当前可读字节数
-    size_t writable() const; // 当前可写字节数
     void clear();            // 重置缓冲区，清空数据并清除 EOF 标志
     void setEof(bool eof);   // 标记 EOF
     bool isEof() const;      // 查询是否已标记 EOF

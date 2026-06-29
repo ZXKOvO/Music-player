@@ -193,28 +193,6 @@ void LyricsParser::clear()
     emit lineCountChanged();
 }
 
-// 按音频时长缩放歌词时间戳（用于 LRC 与实际音频时长不匹配的情况）
-void LyricsParser::alignToDuration(double audioDuration)
-{
-    if (lines_.isEmpty() || audioDuration <= 0) return;
-
-    double lrcDuration = lines_.last().startSec + lines_.last().durationSec;
-    if (lrcDuration <= 0 || qAbs(lrcDuration - audioDuration) < 1.0) return;
-
-    double scale = audioDuration / lrcDuration;
-    qDebug() << "LyricsParser: aligning LRC" << lrcDuration << "s -> audio" << audioDuration << "s, scale=" << scale;
-
-    for (auto &line : lines_) {
-        line.startSec *= scale;
-        line.durationSec *= scale;
-        for (auto &ci : line.charInfos) {
-            ci.startSec *= scale;
-            ci.durationSec *= scale;
-        }
-    }
-    emit lineCountChanged();
-}
-
 // 二分查找当前播放时间对应的歌词行索引
 int LyricsParser::lineAt(double seconds) const
 {

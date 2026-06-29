@@ -41,7 +41,6 @@ public:
 
     Q_INVOKABLE bool load(const QString &path);
     Q_INVOKABLE bool loadFromString(const QString &lrcContent);
-    Q_INVOKABLE void alignToDuration(double audioDuration);
     Q_INVOKABLE void clear();
 
     Q_INVOKABLE int lineAt(double seconds) const;

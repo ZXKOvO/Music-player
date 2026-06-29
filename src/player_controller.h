@@ -22,6 +22,7 @@ class PlayerController : public QObject
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
+    Q_PROPERTY(QString artist READ artist NOTIFY artistChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorOccurred)
     Q_PROPERTY(LyricsParser *lyrics READ lyrics CONSTANT)
     Q_PROPERTY(double playbackSpeed READ playbackSpeed WRITE setPlaybackSpeed NOTIFY playbackSpeedChanged)
@@ -51,6 +52,7 @@ public:
     bool muted() const { return muted_; }
     Q_INVOKABLE void setMuted(bool muted);
     QString title() const { return title_; }
+    QString artist() const { return artist_; }
     QString error() const { return error_; }
     LyricsParser *lyrics() const { return lyrics_; }
     double playbackSpeed() const { return playbackSpeed_; }
@@ -62,6 +64,7 @@ signals:
     void volumeChanged();
     void mutedChanged();
     void titleChanged();
+    void artistChanged();
     void errorOccurred(const QString &msg);
     // 当前曲目播放完毕
     void playbackFinished();
@@ -78,9 +81,8 @@ private:
     void startDecoding();
     // 停止解码线程
     void stopDecoding();
-    // 从文件路径提取歌曲标题
-    static QString extractTitle(const QString &filePath);
-
+    // 刷新滤镜缓冲并写入 RingBuffer
+    void flushFilterToRingBuf();
     // 从文件路径解析歌手和歌名
     static void parseFileName(const QString &filePath, QString &title, QString &artist);
 
@@ -106,7 +108,6 @@ private:
     QString error_;
     LyricsParser *lyrics_;
     LyricsFetcher *lyricsFetcher_;
-    QString currentAudioPath_;
     qint64 startPts_ = 0;
     double playbackSpeed_ = 1.0; // 默认1倍速
 };

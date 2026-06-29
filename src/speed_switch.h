@@ -39,6 +39,8 @@ public:
 private:
     // 重建 atempo 滤镜图
     bool buildFilter(double speed);
+    // 从滤镜输出端读取帧并转换为 interleaved float 格式
+    int drainOutput(float *outputBuf, int outputBufSize);
 
     AVFilterGraph *graph_ = nullptr;
     AVFilterContext *srcCtx_ = nullptr;  //音频缓冲输入端

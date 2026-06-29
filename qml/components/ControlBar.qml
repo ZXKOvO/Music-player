@@ -186,12 +186,13 @@ Rectangle {
         Item { Layout.preferredWidth: 8 }
 
         Label {
-            text: player.title || ""
+            text: player.artist ? (player.title + " - " + player.artist) : (player.title || "")
             color: "#ffffff"
             font.pixelSize: 13
             font.bold: true
             elide: Text.ElideRight
-            Layout.preferredWidth: 150
+            Layout.preferredWidth: 250
+            Layout.fillWidth: true
             visible: player.title !== ""
         }
 

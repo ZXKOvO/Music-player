@@ -57,13 +57,6 @@ size_t RingBuffer::readable() const
     return count_;
 }
 
-// 返回当前缓冲区中可写的字节数
-size_t RingBuffer::writable() const
-{
-    std::lock_guard lock(mutex_);
-    return capacity_ - count_;
-}
-
 // 重置缓冲区：清空数据并清除 EOF 标志，唤醒所有等待的生产者
 void RingBuffer::clear()
 {

@@ -165,38 +165,7 @@ int SpeedSwitch::process(const float *input, int inputSamples, float *outputBuf,
         av_frame_unref(inFrame);
         if (ret < 0) break;
 
-        // 取出所有可用的输出帧
-        while (true) {
-            AVFrame *outFrame = av_frame_alloc();
-            ret = av_buffersink_get_frame(sinkCtx_, outFrame);
-            if (ret < 0) {
-                av_frame_free(&outFrame);
-                break;
-            }
-
-            int outSamples;
-            if (outFrame->format == AV_SAMPLE_FMT_FLTP) {
-                int frames = outFrame->nb_samples;
-                outSamples = frames * channels;
-                if (totalOut + outSamples <= outputBufSize) {
-                    float *dst = outputBuf + totalOut;
-                    for (int ch = 0; ch < channels; ++ch) {
-                        const float *src = (const float *) outFrame->extended_data[ch];
-                        for (int s = 0; s < frames; ++s) {
-                            dst[s * channels + ch] = src[s];
-                        }
-                    }
-                    totalOut += outSamples;
-                }
-            } else {
-                outSamples = outFrame->nb_samples * channels;
-                if (totalOut + outSamples <= outputBufSize) {
-                    std::memcpy(outputBuf + totalOut, outFrame->data[0], outSamples * sizeof(float));
-                    totalOut += outSamples;
-                }
-            }
-            av_frame_free(&outFrame);
-        }
+        totalOut += drainOutput(outputBuf + totalOut, outputBufSize - totalOut);
     }
 
     av_frame_free(&inFrame);
@@ -211,12 +180,18 @@ int SpeedSwitch::flush(float *outputBuf, int outputBufSize)
     int ret = av_buffersrc_add_frame_flags(srcCtx_, nullptr, 0);
     if (ret < 0) return 0;
 
+    return drainOutput(outputBuf, outputBufSize);
+}
+
+// 从滤镜输出端读取帧并转换为 interleaved float 格式
+int SpeedSwitch::drainOutput(float *outputBuf, int outputBufSize)
+{
     int channels = channels_;
     int totalOut = 0;
 
     while (true) {
         AVFrame *outFrame = av_frame_alloc();
-        ret = av_buffersink_get_frame(sinkCtx_, outFrame);
+        int ret = av_buffersink_get_frame(sinkCtx_, outFrame);
         if (ret < 0) {
             av_frame_free(&outFrame);
             break;

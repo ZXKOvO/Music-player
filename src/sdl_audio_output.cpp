@@ -54,15 +54,6 @@ void SDLAudioOutput::pause()
     }
 }
 
-void SDLAudioOutput::stop()
-{
-    if (devId_ > 0) {
-        SDL_PauseAudioDevice(devId_, 1);
-        SDL_ClearQueuedAudio(devId_);
-        playing_.store(false);
-    }
-}
-
 void SDLAudioOutput::setVolume(float vol)
 {
     volume_.store(vol < 0.f ? 0.f : (vol > 1.f ? 1.f : vol));

@@ -98,10 +98,6 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
         return s.title;
     case ArtistRole:
         return s.artist;
-    case AlbumRole:
-        return s.album;
-    case DurationRole:
-        return s.durationMs;
     default:
         return {};
     }
@@ -114,7 +110,5 @@ QHash<int, QByteArray> PlaylistModel::roleNames() const
         {FilePathRole, "filePath"},
         {TitleRole, "title"},
         {ArtistRole, "artist"},
-        {AlbumRole, "album"},
-        {DurationRole, "durationMs"},
     };
 }

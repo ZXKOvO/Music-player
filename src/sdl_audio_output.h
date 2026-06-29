@@ -17,12 +17,10 @@ public:
 
     void play();
     void pause();
-    void stop();
 
     void setVolume(float vol);
     float volume() const;
 
-    bool isPlaying() const { return playing_.load(); }
     bool isOpen() const { return devId_ > 0; }
 
 private:

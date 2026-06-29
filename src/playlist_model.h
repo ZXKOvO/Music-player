@@ -10,8 +10,6 @@ struct Song
     QString filePath;
     QString title;
     QString artist;
-    QString album;
-    qint64 durationMs = 0; // 毫秒
 };
 
 // 播放列表模型：QAbstractListModel，供 QML ListView 显示歌曲列表
@@ -30,7 +28,7 @@ public:
     };
     Q_ENUM(PlayMode)
 
-    enum Roles { FilePathRole = Qt::UserRole + 1, TitleRole, ArtistRole, AlbumRole, DurationRole };
+    enum Roles { FilePathRole = Qt::UserRole + 1, TitleRole, ArtistRole };
 
     explicit PlaylistModel(QObject *parent = nullptr);
 

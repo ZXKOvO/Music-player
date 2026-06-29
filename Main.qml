@@ -552,11 +552,4 @@ ApplicationWindow {
         window.currentIndex = next
         player.playFile(playlistModel.filePath(next))
     }
-
-    function formatTime(sec) {
-        if (!isFinite(sec) || sec < 0) return "0:00"
-        var m = Math.floor(sec / 60)
-        var s = Math.floor(sec % 60)
-        return m + ":" + (s < 10 ? "0" : "") + s
-    }
 }
