@@ -41,6 +41,7 @@ ApplicationWindow {
     PlayerController {
         id: player
         onPlaybackFinished: autoPlayNext()
+        Component.onCompleted: registerCoverProvider() // 注册封面 ImageProvider 到 QML 引擎
     }
 
     ColumnLayout {

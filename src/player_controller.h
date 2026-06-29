@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QThread>
+#include <QUrl>
 #include <QtQml/qqmlregistration.h>
 #include "audio_decoder.h"
 #include "sdl_audio_output.h"
@@ -9,6 +10,7 @@
 #include "ring_buffer.h"
 #include "lyrics_parser.h"
 #include "lyrics_fetcher.h"
+#include "cover_image_provider.h"
 
 // 播放控制器：协调 AudioDecoder + RingBuffer + SDLAudioOutput，
 // 暴露 Q_PROPERTY / Q_INVOKABLE 给 QML 调用
@@ -26,36 +28,34 @@ class PlayerController : public QObject
     Q_PROPERTY(QString error READ error NOTIFY errorOccurred)
     Q_PROPERTY(LyricsParser *lyrics READ lyrics CONSTANT)
     Q_PROPERTY(double playbackSpeed READ playbackSpeed WRITE setPlaybackSpeed NOTIFY playbackSpeedChanged)
+    Q_PROPERTY(bool hasCover READ hasCover NOTIFY hasCoverChanged)
 public:
     explicit PlayerController(QObject *parent = nullptr);
     ~PlayerController();
 
-    // 播放指定文件路径（支持 file:/// URL 或本地路径）
     Q_INVOKABLE void playFile(const QString &filePath);
-    // 播放/暂停切换
     Q_INVOKABLE void togglePlay();
-    // 停止播放
     Q_INVOKABLE void stop();
-    // 跳转到指定秒数位置
     Q_INVOKABLE void seek(double pos);
-    // 静音切换
     Q_INVOKABLE void toggleMute();
-    // 设置播放倍速
     Q_INVOKABLE void setPlaybackSpeed(double speed);
+    Q_INVOKABLE void setVolume(float vol);
+    Q_INVOKABLE void setMuted(bool muted);
+
+    // 注册封面图片提供器到 QML 引擎（由 Main.qml 在 onCompleted 中调用）
+    Q_INVOKABLE void registerCoverProvider();
 
     bool playing() const { return playing_; }
     double duration() const { return duration_; }
     double position() const { return position_; }
     float volume() const;
-    // 设置音量 (0.0 ~ 1.0)
-    Q_INVOKABLE void setVolume(float vol);
     bool muted() const { return muted_; }
-    Q_INVOKABLE void setMuted(bool muted);
     QString title() const { return title_; }
     QString artist() const { return artist_; }
     QString error() const { return error_; }
     LyricsParser *lyrics() const { return lyrics_; }
     double playbackSpeed() const { return playbackSpeed_; }
+    bool hasCover() const { return hasCover_; }
 
 signals:
     void playingChanged();
@@ -65,25 +65,19 @@ signals:
     void mutedChanged();
     void titleChanged();
     void artistChanged();
+    void hasCoverChanged();
     void errorOccurred(const QString &msg);
-    // 当前曲目播放完毕
     void playbackFinished();
     void playbackSpeedChanged();
 
 private slots:
-    // 定时更新播放进度
     void onUpdatePosition();
-    // seek 防抖
     void doSeek();
 
 private:
-    // 启动解码线程
     void startDecoding();
-    // 停止解码线程
     void stopDecoding();
-    // 刷新滤镜缓冲并写入 RingBuffer
     void flushFilterToRingBuf();
-    // 从文件路径解析歌手和歌名
     static void parseFileName(const QString &filePath, QString &title, QString &artist);
 
     AudioDecoder decoder_;
@@ -106,8 +100,10 @@ private:
     QString title_;
     QString artist_;
     QString error_;
+    bool hasCover_ = false;
+    CoverImageProvider coverProvider_;   // 封面提供器，playFile() 时写入数据，QML 通过 image:// 读取
     LyricsParser *lyrics_;
     LyricsFetcher *lyricsFetcher_;
     qint64 startPts_ = 0;
-    double playbackSpeed_ = 1.0; // 默认1倍速
+    double playbackSpeed_ = 1.0;
 };

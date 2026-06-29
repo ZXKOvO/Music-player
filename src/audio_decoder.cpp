@@ -13,6 +13,7 @@ AudioDecoder::~AudioDecoder()
 bool AudioDecoder::open(const QString &filePath)
 {
     close();
+    filePath_ = filePath;
 
     // 打开文件并探测流信息
     int ret = avformat_open_input(&fmtCtx_, filePath.toUtf8().constData(), nullptr, nullptr);
@@ -187,4 +188,84 @@ bool AudioDecoder::seek(double positionSec)
 double AudioDecoder::duration() const
 {
     return duration_;
+}
+
+// 提取音频文件内嵌的封面图片数据（JPEG/PNG），无封面返回空 QByteArray
+// 使用独立的 AVFormatContext，不干扰主解码流程
+QByteArray AudioDecoder::coverData() const
+{
+    if (filePath_.isEmpty()) return {};
+
+    // 用独立上下文打开文件读封面
+    AVFormatContext *coverCtx = nullptr;
+    int ret = avformat_open_input(&coverCtx, filePath_.toUtf8().constData(), nullptr, nullptr);
+    if (ret < 0 || !coverCtx) return {};
+
+    avformat_find_stream_info(coverCtx, nullptr);
+
+    QByteArray result;
+
+    // 方法1：查找附件类型流（FLAC picture 等）
+    for (unsigned i = 0; i < coverCtx->nb_streams; ++i) {
+        AVStream *st = coverCtx->streams[i];
+        if (st->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT) {
+            if (st->codecpar->codec_id == AV_CODEC_ID_MJPEG ||
+                st->codecpar->codec_id == AV_CODEC_ID_PNG ||
+                st->codecpar->codec_id == AV_CODEC_ID_BMP) {
+                result = QByteArray(reinterpret_cast<const char *>(st->codecpar->extradata),
+                                    st->codecpar->extradata_size);
+                break;
+            }
+        }
+    }
+
+    // 方法2：查找视频流（MP3 ID3v2 APIC 封面被 FFmpeg 识别为 video 流）
+    if (result.isEmpty()) {
+        for (unsigned i = 0; i < coverCtx->nb_streams; ++i) {
+            AVStream *st = coverCtx->streams[i];
+            if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO &&
+                (st->codecpar->codec_id == AV_CODEC_ID_MJPEG ||
+                 st->codecpar->codec_id == AV_CODEC_ID_PNG ||
+                 st->codecpar->codec_id == AV_CODEC_ID_BMP)) {
+                AVPacket *pkt = av_packet_alloc();
+                while (av_read_frame(coverCtx, pkt) >= 0) {
+                    if (static_cast<unsigned>(pkt->stream_index) == i) {
+                        result = QByteArray(reinterpret_cast<const char *>(pkt->data), pkt->size);
+                        av_packet_unref(pkt);
+                        break;
+                    }
+                    av_packet_unref(pkt);
+                }
+                av_packet_free(&pkt);
+                break;
+            }
+        }
+    }
+
+    // 方法3：从 metadata 中查找 METADATA_BLOCK_PICTURE（FLAC/Vorbis）
+    if (result.isEmpty() && coverCtx->metadata) {
+        AVDictionaryEntry *tag = av_dict_get(coverCtx->metadata, "METADATA_BLOCK_PICTURE", nullptr, 0);
+        if (tag) {
+            QByteArray raw(tag->value, strlen(tag->value));
+            int jpegStart = raw.indexOf("\xff\xd8");
+            if (jpegStart >= 0) {
+                int jpegEnd = raw.indexOf("\xff\xd9", jpegStart);
+                if (jpegEnd >= 0) {
+                    result = raw.mid(jpegStart, jpegEnd - jpegStart + 2);
+                }
+            }
+            if (result.isEmpty()) {
+                int pngStart = raw.indexOf("\x89PNG");
+                if (pngStart >= 0) {
+                    int pngEnd = raw.indexOf("IEND", pngStart);
+                    if (pngEnd >= 0) {
+                        result = raw.mid(pngStart, pngEnd - pngStart + 4 + 4);
+                    }
+                }
+            }
+        }
+    }
+
+    avformat_close_input(&coverCtx);
+    return result;
 }

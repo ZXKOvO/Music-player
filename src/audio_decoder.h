@@ -1,5 +1,6 @@
 #pragma once
 #include <QString>
+#include <QByteArray>
 #include <atomic>
 
 extern "C" {
@@ -42,6 +43,9 @@ public:
     // 文件是否已打开
     bool isOpen() const { return fmtCtx_ != nullptr; }
 
+    // 提取音频文件内嵌的封面图片数据（JPEG/PNG），无封面返回空 QByteArray
+    QByteArray coverData() const;
+
 private:
     // 创建并初始化重采样器，将源格式转换为目标统一格式
     bool initResampler();
@@ -53,6 +57,7 @@ private:
 
     AudioFormat outputFormat_; // 统一输出格式
     double duration_ = 0.0;
+    QString filePath_;        // 保存文件路径，供 coverData 读取封面
 
     std::atomic<bool> seeking_{false}; // seek 进行中标志，防止 readPCM 竞争
 };

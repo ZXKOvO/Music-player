@@ -1,9 +1,12 @@
 #include "player_controller.h"
+#include "cover_image_provider.h"
 #include <QFileInfo>
 #include <QUrl>
 #include <QDebug>
 #include <SDL2/SDL.h>
 #include <QDateTime>
+#include <QQmlEngine>
+#include <QQmlContext>
 
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
@@ -78,6 +81,17 @@ void PlayerController::playFile(const QString &filePath)
     emit titleChanged();
     emit artistChanged();
 
+    // 提取封面图片，通过 ImageProvider 直接传递给 QML（无临时文件）
+    QByteArray coverBytes = decoder_.coverData();
+    if (!coverBytes.isEmpty()) {
+        coverProvider_.setCoverData(coverBytes);
+        hasCover_ = true;
+    } else {
+        coverProvider_.clear();
+        hasCover_ = false;
+    }
+    emit hasCoverChanged();
+
     // 加载本地歌词，然后用网易云 API 获取匹配的歌词替换
     lyrics_->setFilePath(localPath);
     lyricsFetcher_->fetchLyrics(title_, artist_, duration_);
@@ -135,11 +149,14 @@ void PlayerController::stop()
     position_ = 0.0;
     duration_ = 0.0;
     title_.clear();
+    coverProvider_.clear();
+    hasCover_ = false;
     lyrics_->clear();
     emit playingChanged();
     emit positionChanged();
     emit durationChanged();
     emit titleChanged();
+    emit hasCoverChanged();
 }
 
 // seek 防抖：记录位置并延迟执行
@@ -228,6 +245,13 @@ void PlayerController::setPlaybackSpeed(double speed)
 
     emit playbackSpeedChanged();
     qDebug() << "Playback speed set to:" << speed;
+}
+
+void PlayerController::registerCoverProvider()
+{
+    if (auto *ctx = QQmlEngine::contextForObject(this)) {
+        ctx->engine()->addImageProvider("cover", &coverProvider_);
+    }
 }
 
 // 定时轮询进度：经过时间 × 倍速 = 实际播放位置

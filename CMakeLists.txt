@@ -45,8 +45,10 @@ qt_add_qml_module(MusicPlayer
         src/lyrics_parser.cpp
         src/lyrics_fetcher.h
         src/lyrics_fetcher.cpp
-        src/playlist_manager.h   # 歌单管理器
+        src/playlist_manager.h
         src/playlist_manager.cpp
+        src/cover_image_provider.h
+        src/cover_image_provider.cpp
     QML_FILES
         Main.qml
         qml/pages/PlaylistPage.qml
