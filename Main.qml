@@ -312,7 +312,7 @@ ApplicationWindow {
 
                     property bool alreadyAdded: {
                         var _v = window.playlistSongVersion
-                        return playlistManager.containsSongByTitle(playlistManager.currentPlaylistIndex, title)
+                        return playlistManager.containsSong(playlistManager.currentPlaylistIndex, filePath)
                     }
 
                     TapHandler {
@@ -444,9 +444,7 @@ ApplicationWindow {
                     property bool alreadyIn: {
                         var _v = window.playlistSongVersion
                         var curFile = playlistModel.filePath(window.currentIndex)
-                        var curTitle = player.title
-                        return (curFile !== "" && playlistManager.containsSong(index, curFile))
-                            || (curTitle !== "" && playlistManager.containsSongByTitle(index, curTitle))
+                        return curFile !== "" && playlistManager.containsSong(index, curFile)
                     }
 
                     TapHandler {
