@@ -32,14 +32,15 @@ public:
     Q_INVOKABLE void createPlaylist(const QString &name);                           // 创建歌单
     Q_INVOKABLE void deletePlaylist(int index);                                     // 删除歌单
     Q_INVOKABLE void renamePlaylist(int index, const QString &newName);             // 重命名歌单
-    Q_INVOKABLE void addSongToPlaylist(int playlistIndex, const QString &filePath); // 向指定歌单添加歌曲
-    Q_INVOKABLE void addSongToCurrentPlaylist(const QString &filePath);             // 向当前歌单添加歌曲
+    Q_INVOKABLE bool addSongToPlaylist(int playlistIndex, const QString &filePath); // 向指定歌单添加歌曲，返回是否成功
+    Q_INVOKABLE bool addSongToCurrentPlaylist(const QString &filePath);             // 向当前歌单添加歌曲，返回是否成功
     Q_INVOKABLE void removeSongFromCurrentPlaylist(int songIndex);                  // 从当前歌单移除歌曲
     Q_INVOKABLE QString playlistName(int index) const;
     Q_INVOKABLE int playlistSongCount(int index) const;
     Q_INVOKABLE QString songFilePath(int playlistIndex, int songIndex) const;
     Q_INVOKABLE QString songTitle(int playlistIndex, int songIndex) const;
-    Q_INVOKABLE bool containsSong(int playlistIndex, const QString &filePath) const; // 判断歌单是否包含某歌曲
+    Q_INVOKABLE bool containsSong(int playlistIndex, const QString &filePath) const; // 判断歌单是否包含某歌曲（按文件路径）
+    Q_INVOKABLE bool containsSongByTitle(int playlistIndex, const QString &title) const; // 判断歌单是否包含某歌曲（按歌名）
 
     int count() const;
     int currentPlaylistIndex() const;

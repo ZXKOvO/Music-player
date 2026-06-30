@@ -312,13 +312,17 @@ ApplicationWindow {
 
                     property bool alreadyAdded: {
                         var _v = window.playlistSongVersion
-                        return playlistManager.containsSong(playlistManager.currentPlaylistIndex, filePath)
+                        return playlistManager.containsSongByTitle(playlistManager.currentPlaylistIndex, title)
                     }
 
                     TapHandler {
                         onTapped: {
                             if (!alreadyAdded) {
-                                playlistManager.addSongToCurrentPlaylist(filePath)
+                                if (!playlistManager.addSongToCurrentPlaylist(filePath)) {
+                                    window.showToast(qsTr("该歌曲已在歌单中"))
+                                }
+                            } else {
+                                window.showToast(qsTr("该歌曲已在歌单中"))
                             }
                         }
                     }
@@ -440,7 +444,9 @@ ApplicationWindow {
                     property bool alreadyIn: {
                         var _v = window.playlistSongVersion
                         var curFile = playlistModel.filePath(window.currentIndex)
-                        return curFile !== "" && playlistManager.containsSong(index, curFile)
+                        var curTitle = player.title
+                        return (curFile !== "" && playlistManager.containsSong(index, curFile))
+                            || (curTitle !== "" && playlistManager.containsSongByTitle(index, curTitle))
                     }
 
                     TapHandler {
@@ -448,8 +454,12 @@ ApplicationWindow {
                             if (!alreadyIn) {
                                 var curFile = playlistModel.filePath(window.currentIndex)
                                 if (curFile !== "") {
-                                    playlistManager.addSongToPlaylist(index, curFile)
+                                    if (!playlistManager.addSongToPlaylist(index, curFile)) {
+                                        window.showToast(qsTr("该歌曲已在歌单中"))
+                                    }
                                 }
+                            } else {
+                                window.showToast(qsTr("该歌曲已在歌单中"))
                             }
                         }
                     }
@@ -502,9 +512,17 @@ ApplicationWindow {
         nameFilters: ["Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape)", "All Files (*)"]
         onAccepted: {
             var paths = selectedFiles
+            var count = 0
             for (var i = 0; i < paths.length; i++) {
                 var path = paths[i].toString()
-                playlistManager.addSongToCurrentPlaylist(path)
+                if (playlistManager.addSongToCurrentPlaylist(path)) {
+                    count++
+                }
+            }
+            if (count === 0 && paths.length > 0) {
+                window.showToast(qsTr("所选歌曲已全部在歌单中"))
+            } else if (paths.length > count) {
+                window.showToast(qsTr("已添加 %1 首，%2 首重复跳过").arg(count).arg(paths.length - count))
             }
         }
     }
@@ -552,5 +570,44 @@ ApplicationWindow {
         }
         window.currentIndex = next
         player.playFile(playlistModel.filePath(next))
+    }
+
+    // Toast 提示
+    property string toastMessage: ""
+    property bool toastVisible: false
+
+    Timer {
+        id: toastTimer
+        interval: 2000
+        onTriggered: toastVisible = false
+    }
+
+    Popup {
+        id: toastPopup
+        anchors.centerIn: parent
+        width: toastLabel.implicitWidth + 32
+        height: 36
+        visible: toastVisible
+        closePolicy: Popup.NoAutoClose
+
+        background: Rectangle {
+            color: "#cc333333"
+            radius: 18
+        }
+
+        contentItem: Label {
+            id: toastLabel
+            text: toastMessage
+            color: "#ffffff"
+            font.pixelSize: 13
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    function showToast(msg) {
+        toastMessage = msg
+        toastVisible = true
+        toastTimer.restart()
     }
 }

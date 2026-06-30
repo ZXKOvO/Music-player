@@ -53,24 +53,39 @@ void PlaylistManager::renamePlaylist(int index, const QString &newName)
     saveToFile();
 }
 
-// 向指定歌单添加歌曲，自动去重，始终发射 songsChanged 保证数量同步
-void PlaylistManager::addSongToPlaylist(int playlistIndex, const QString &filePath)
+// 向指定歌单添加歌曲，按歌名自动去重，返回是否成功
+bool PlaylistManager::addSongToPlaylist(int playlistIndex, const QString &filePath)
 {
-    if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return;
-    if (containsSong(playlistIndex, filePath)) return;
+    if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
+    QString title;
+    QString artist;
+    // 解析文件名：歌手 - 歌名 格式
+    QString baseName = QFileInfo(filePath).completeBaseName();
+    int sep = baseName.indexOf(" - ");
+    if (sep > 0) {
+        artist = baseName.left(sep).trimmed();
+        title = baseName.mid(sep + 3).trimmed();
+    } else {
+        artist.clear();
+        title = baseName.trimmed();
+    }
+    // 按歌名判重
+    if (containsSongByTitle(playlistIndex, title)) return false;
     Song s;
     s.filePath = filePath;
-    s.title = QFileInfo(filePath).completeBaseName();
+    s.title = title;
+    s.artist = artist;
     playlists_[playlistIndex].songs.append(s);
     QModelIndex idx = createIndex(playlistIndex, 0);
     emit dataChanged(idx, idx, {SongCountRole});
     emit songsChanged();
     saveToFile();
+    return true;
 }
 
-void PlaylistManager::addSongToCurrentPlaylist(const QString &filePath)
+bool PlaylistManager::addSongToCurrentPlaylist(const QString &filePath)
 {
-    addSongToPlaylist(currentPlaylistIndex_, filePath);
+    return addSongToPlaylist(currentPlaylistIndex_, filePath);
 }
 
 // 从当前歌单移除指定歌曲
@@ -119,6 +134,25 @@ bool PlaylistManager::containsSong(int playlistIndex, const QString &filePath) c
     if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
     for (const auto &s : playlists_[playlistIndex].songs) {
         if (s.filePath == filePath) return true;
+    }
+    return false;
+}
+
+static QString normalizeTitle(const QString &t) {
+    // 去掉末尾的 "-歌手" 或 " - 歌手" 部分，用于判重
+    int sep = t.lastIndexOf(" - ");
+    if (sep > 0) return t.left(sep).trimmed();
+    sep = t.lastIndexOf("-");
+    if (sep > 0) return t.left(sep).trimmed();
+    return t.trimmed();
+}
+
+bool PlaylistManager::containsSongByTitle(int playlistIndex, const QString &title) const
+{
+    if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
+    QString norm = normalizeTitle(title);
+    for (const auto &s : playlists_[playlistIndex].songs) {
+        if (s.title == title || normalizeTitle(s.title) == norm) return true;
     }
     return false;
 }
