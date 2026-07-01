@@ -49,6 +49,10 @@ qt_add_qml_module(MusicPlayer
         src/playlist_manager.cpp
         src/cover_image_provider.h
         src/cover_image_provider.cpp
+        src/song_searcher.h
+        src/song_searcher.cpp
+        src/search_result_model.h
+        src/search_result_model.cpp
     QML_FILES
         Main.qml
         qml/pages/PlaylistPage.qml

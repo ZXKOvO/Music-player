@@ -34,18 +34,15 @@ ColumnLayout {
                     border.color: searchField.activeFocus ? "#1db954" : "#e0e0e0"
                     border.width: 1
                 }
-                // TODO: 实现搜索功能后取消注释
-                // onAccepted: songSearcher.search(text)
+                onAccepted: songSearcher.search(text)
             }
 
             Button {
                 text: qsTr("搜索")
                 Layout.fillHeight: true
                 Layout.preferredWidth: 64
-                // TODO: 实现搜索功能后取消注释
-                // enabled: !songSearcher.searching && searchField.text.trim().length > 0
-                enabled: searchField.text.trim().length > 0
-                // onClicked: songSearcher.search(searchField.text)
+                enabled: !songSearcher.searching && searchField.text.trim().length > 0
+                onClicked: songSearcher.search(searchField.text)
                 contentItem: Label {
                     text: qsTr("搜索")
                     color: parent.enabled ? "#ffffff" : "#cccccc"
@@ -69,28 +66,27 @@ ColumnLayout {
     }
 
     // Search status indicator
-    // TODO: 实现搜索功能后启用
-    // RowLayout {
-    //     Layout.fillWidth: true
-    //     Layout.preferredHeight: 36
-    //     Layout.leftMargin: 12
-    //     Layout.rightMargin: 12
-    //     visible: songSearcher.searching || songSearcher.errorMessage.length > 0
-    //
-    //     Label {
-    //         text: songSearcher.searching ? qsTr("搜索中...") : songSearcher.errorMessage
-    //         color: songSearcher.errorMessage.length > 0 ? "#cc0000" : "#888888"
-    //         font.pixelSize: 13
-    //         Layout.fillWidth: true
-    //     }
-    //
-    //     BusyIndicator {
-    //         running: songSearcher.searching
-    //         visible: songSearcher.searching
-    //         Layout.preferredWidth: 20
-    //         Layout.preferredHeight: 20
-    //     }
-    // }
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 36
+        Layout.leftMargin: 12
+        Layout.rightMargin: 12
+        visible: songSearcher.searching || songSearcher.errorMessage.length > 0
+
+        Label {
+            text: songSearcher.searching ? qsTr("搜索中...") : songSearcher.errorMessage
+            color: songSearcher.errorMessage.length > 0 ? "#cc0000" : "#888888"
+            font.pixelSize: 13
+            Layout.fillWidth: true
+        }
+
+        BusyIndicator {
+            running: songSearcher.searching
+            visible: songSearcher.searching
+            Layout.preferredWidth: 20
+            Layout.preferredHeight: 20
+        }
+    }
 
     // Search results list
     ListView {
@@ -98,9 +94,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
-        // TODO: 实现搜索功能后绑定 model
-        // model: songSearcher.model
-        model: ListModel {}
+        model: songSearcher.model
         spacing: 0
 
         delegate: Rectangle {
@@ -165,12 +159,9 @@ ColumnLayout {
                     implicitWidth: 32
                     implicitHeight: 32
                     visible: resultHover.hovered
-                    // TODO: 实现搜索功能后取消注释
-                    // onClicked: {
-                    //     songSearcher.pendingPlay = true
-                    //     window.showToast(qsTr("正在获取歌曲..."))
-                    //     songSearcher.getSongUrl(songId, name, artist)
-                    // }
+                    onClicked: {
+                        window.showToast(qsTr("播放功能暂未实现"))
+                    }
                     contentItem: Label {
                         text: "\u25B6"
                         color: "#1db954"
@@ -190,12 +181,9 @@ ColumnLayout {
                     implicitWidth: 32
                     implicitHeight: 32
                     visible: resultHover.hovered
-                    // TODO: 实现搜索功能后取消注释
-                    // onClicked: {
-                    //     songSearcher.pendingPlay = false
-                    //     window.showToast(qsTr("正在获取歌曲..."))
-                    //     songSearcher.getSongUrl(songId, name, artist)
-                    // }
+                    onClicked: {
+                        window.showToast(qsTr("添加功能暂未实现"))
+                    }
                     contentItem: Label {
                         text: "+"
                         color: "#1db954"
@@ -215,9 +203,7 @@ ColumnLayout {
         // Empty state label
         Label {
             anchors.centerIn: parent
-            // TODO: 实现搜索功能后修改 visible 条件
-            // visible: songSearcher.model.count === 0 && !songSearcher.searching
-            visible: resultView.count === 0
+            visible: songSearcher.model.count === 0 && !songSearcher.searching
             text: qsTr("搜索在线歌曲")
             color: "#999999"
             font.pixelSize: 15

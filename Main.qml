@@ -44,6 +44,10 @@ ApplicationWindow {
         Component.onCompleted: registerCoverProvider() // 注册封面 ImageProvider 到 QML 引擎
     }
 
+    SongSearcher {
+        id: songSearcher
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
