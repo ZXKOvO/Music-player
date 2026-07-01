@@ -65,6 +65,14 @@ bool PlaylistModel::contains(const QString &filePath) const
     return false;
 }
 
+int PlaylistModel::indexOf(const QString &filePath) const
+{
+    for (int i = 0; i < songs_.size(); ++i) {
+        if (songs_[i].filePath == filePath) return i;
+    }
+    return -1;
+}
+
 // 设置播放模式
 void PlaylistModel::setPlayMode(int mode)
 {

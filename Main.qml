@@ -46,6 +46,24 @@ ApplicationWindow {
 
     SongSearcher {
         id: songSearcher
+        property bool pendingPlay: false
+        onSongUrlReady: function(filePath, songName, artist) {
+            if (!playlistModel.contains(filePath)) {
+                playlistModel.addFile(filePath)
+            }
+            if (pendingPlay) {
+                pendingPlay = false
+                var idx = playlistModel.indexOf(filePath)
+                if (idx >= 0) {
+                    window.currentIndex = idx
+                    player.playFile(filePath)
+                }
+            }
+            window.showToast(qsTr("已添加: %1").arg(songName))
+        }
+        onSongUrlFailed: function(songName, reason) {
+            window.showToast(qsTr("获取歌曲失败: %1").arg(reason))
+        }
     }
 
     ColumnLayout {

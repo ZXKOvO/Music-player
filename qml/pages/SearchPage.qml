@@ -160,7 +160,9 @@ ColumnLayout {
                     implicitHeight: 32
                     visible: resultHover.hovered
                     onClicked: {
-                        window.showToast(qsTr("播放功能暂未实现"))
+                        songSearcher.pendingPlay = true
+                        window.showToast(qsTr("正在获取歌曲..."))
+                        songSearcher.getSongUrl(songId, name, artist)
                     }
                     contentItem: Label {
                         text: "\u25B6"
@@ -182,7 +184,9 @@ ColumnLayout {
                     implicitHeight: 32
                     visible: resultHover.hovered
                     onClicked: {
-                        window.showToast(qsTr("添加功能暂未实现"))
+                        songSearcher.pendingPlay = false
+                        window.showToast(qsTr("正在获取歌曲..."))
+                        songSearcher.getSongUrl(songId, name, artist)
                     }
                     contentItem: Label {
                         text: "+"

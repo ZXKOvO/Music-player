@@ -23,10 +23,13 @@ public:
     QString errorMessage() const { return errorMessage_; }
 
     Q_INVOKABLE void search(const QString &keyword);
+    Q_INVOKABLE void getSongUrl(int songId, const QString &songName, const QString &artist);
 
 signals:
     void searchingChanged();
     void errorMessageChanged();
+    void songUrlReady(const QString &filePath, const QString &songName, const QString &artist);
+    void songUrlFailed(const QString &songName, const QString &reason);
 
 private:
     QNetworkAccessManager *netMgr_;
