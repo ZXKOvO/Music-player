@@ -101,7 +101,7 @@ private:
     QString artist_;
     QString error_;
     bool hasCover_ = false;
-    CoverImageProvider coverProvider_;   // 封面提供器，playFile() 时写入数据，QML 通过 image:// 读取
+    CoverImageProvider coverProvider_; // 封面提供器，playFile() 时写入数据，QML 通过 image:// 读取
     LyricsParser *lyrics_;
     LyricsFetcher *lyricsFetcher_;
     qint64 startPts_ = 0;

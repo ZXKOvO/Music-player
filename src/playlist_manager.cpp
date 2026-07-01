@@ -209,9 +209,7 @@ void PlaylistManager::saveToFile()
     QString path = savePath();
     QFileInfo(path).absoluteDir().mkpath(".");
     QFile file(path);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        file.write(doc.toJson(QJsonDocument::Indented));
-    }
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) { file.write(doc.toJson(QJsonDocument::Indented)); }
 }
 
 void PlaylistManager::loadFromFile()
@@ -242,7 +240,5 @@ void PlaylistManager::loadFromFile()
         playlists_.append(pl);
     }
     endResetModel();
-    if (!playlists_.isEmpty()) {
-        emit countChanged();
-    }
+    if (!playlists_.isEmpty()) { emit countChanged(); }
 }

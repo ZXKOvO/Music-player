@@ -249,9 +249,7 @@ void PlayerController::setPlaybackSpeed(double speed)
 
 void PlayerController::registerCoverProvider()
 {
-    if (auto *ctx = QQmlEngine::contextForObject(this)) {
-        ctx->engine()->addImageProvider("cover", &coverProvider_);
-    }
+    if (auto *ctx = QQmlEngine::contextForObject(this)) { ctx->engine()->addImageProvider("cover", &coverProvider_); }
 }
 
 // 定时轮询进度：经过时间 × 倍速 = 实际播放位置

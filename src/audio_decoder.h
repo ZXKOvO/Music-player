@@ -57,7 +57,7 @@ private:
 
     AudioFormat outputFormat_; // 统一输出格式
     double duration_ = 0.0;
-    QString filePath_;        // 保存文件路径，供 coverData 读取封面
+    QString filePath_; // 保存文件路径，供 coverData 读取封面
 
     std::atomic<bool> seeking_{false}; // seek 进行中标志，防止 readPCM 竞争
 };

@@ -55,6 +55,7 @@ qt_add_qml_module(MusicPlayer
         qml/pages/PlaylistsPage.qml
         qml/pages/PlaylistDetailPage.qml
         qml/pages/LyricsPage.qml
+        qml/pages/SearchPage.qml
         qml/components/ControlBar.qml
     RESOURCES
         resources/icons/add.svg

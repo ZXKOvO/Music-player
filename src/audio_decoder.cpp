@@ -209,9 +209,8 @@ QByteArray AudioDecoder::coverData() const
     for (unsigned i = 0; i < coverCtx->nb_streams; ++i) {
         AVStream *st = coverCtx->streams[i];
         if (st->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT) {
-            if (st->codecpar->codec_id == AV_CODEC_ID_MJPEG ||
-                st->codecpar->codec_id == AV_CODEC_ID_PNG ||
-                st->codecpar->codec_id == AV_CODEC_ID_BMP) {
+            if (st->codecpar->codec_id == AV_CODEC_ID_MJPEG || st->codecpar->codec_id == AV_CODEC_ID_PNG
+                || st->codecpar->codec_id == AV_CODEC_ID_BMP) {
                 result = QByteArray(reinterpret_cast<const char *>(st->codecpar->extradata),
                                     st->codecpar->extradata_size);
                 break;
@@ -223,10 +222,9 @@ QByteArray AudioDecoder::coverData() const
     if (result.isEmpty()) {
         for (unsigned i = 0; i < coverCtx->nb_streams; ++i) {
             AVStream *st = coverCtx->streams[i];
-            if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO &&
-                (st->codecpar->codec_id == AV_CODEC_ID_MJPEG ||
-                 st->codecpar->codec_id == AV_CODEC_ID_PNG ||
-                 st->codecpar->codec_id == AV_CODEC_ID_BMP)) {
+            if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO
+                && (st->codecpar->codec_id == AV_CODEC_ID_MJPEG || st->codecpar->codec_id == AV_CODEC_ID_PNG
+                    || st->codecpar->codec_id == AV_CODEC_ID_BMP)) {
                 AVPacket *pkt = av_packet_alloc();
                 while (av_read_frame(coverCtx, pkt) >= 0) {
                     if (static_cast<unsigned>(pkt->stream_index) == i) {
@@ -250,17 +248,13 @@ QByteArray AudioDecoder::coverData() const
             int jpegStart = raw.indexOf("\xff\xd8");
             if (jpegStart >= 0) {
                 int jpegEnd = raw.indexOf("\xff\xd9", jpegStart);
-                if (jpegEnd >= 0) {
-                    result = raw.mid(jpegStart, jpegEnd - jpegStart + 2);
-                }
+                if (jpegEnd >= 0) { result = raw.mid(jpegStart, jpegEnd - jpegStart + 2); }
             }
             if (result.isEmpty()) {
                 int pngStart = raw.indexOf("\x89PNG");
                 if (pngStart >= 0) {
                     int pngEnd = raw.indexOf("IEND", pngStart);
-                    if (pngEnd >= 0) {
-                        result = raw.mid(pngStart, pngEnd - pngStart + 4 + 4);
-                    }
+                    if (pngEnd >= 0) { result = raw.mid(pngStart, pngEnd - pngStart + 4 + 4); }
                 }
             }
         }

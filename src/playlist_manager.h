@@ -39,8 +39,10 @@ public:
     Q_INVOKABLE int playlistSongCount(int index) const;
     Q_INVOKABLE QString songFilePath(int playlistIndex, int songIndex) const;
     Q_INVOKABLE QString songTitle(int playlistIndex, int songIndex) const;
-    Q_INVOKABLE bool containsSong(int playlistIndex, const QString &filePath) const; // 判断歌单是否包含某歌曲（按文件路径）
-    Q_INVOKABLE bool containsSongByTitle(int playlistIndex, const QString &title) const; // 判断歌单是否包含某歌曲（按歌名）
+    Q_INVOKABLE bool containsSong(int playlistIndex,
+                                  const QString &filePath) const; // 判断歌单是否包含某歌曲（按文件路径）
+    Q_INVOKABLE bool containsSongByTitle(int playlistIndex,
+                                         const QString &title) const; // 判断歌单是否包含某歌曲（按歌名）
 
     int count() const;
     int currentPlaylistIndex() const;

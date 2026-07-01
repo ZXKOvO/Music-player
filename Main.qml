@@ -106,6 +106,36 @@ ApplicationWindow {
                             }
 
                             Button {
+                                text: qsTr("搜索")
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                flat: true
+                                onClicked: {
+                                    window.leftView = "search"
+                                    leftStackView.pop(null)
+                                    leftStackView.push(searchViewComp)
+                                }
+                                contentItem: Label {
+                                    text: qsTr("搜索")
+                                    color: window.leftView === "search" ? "#1db954" : "#666666"
+                                    font.pixelSize: 14
+                                    font.bold: window.leftView === "search"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                                background: Rectangle {
+                                    color: "transparent"
+                                    Rectangle {
+                                        anchors.bottom: parent.bottom
+                                        width: parent.width
+                                        height: 2
+                                        color: "#1db954"
+                                        visible: window.leftView === "search"
+                                    }
+                                }
+                            }
+
+                            Button {
                                 text: qsTr("我的歌单")
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -117,9 +147,9 @@ ApplicationWindow {
                                 }
                                 contentItem: Label {
                                     text: qsTr("我的歌单")
-                                    color: window.leftView !== "main" ? "#1db954" : "#666666"
+                                    color: window.leftView === "playlists" ? "#1db954" : "#666666"
                                     font.pixelSize: 14
-                                    font.bold: window.leftView !== "main"
+                                    font.bold: window.leftView === "playlists"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
@@ -130,7 +160,7 @@ ApplicationWindow {
                                         width: parent.width
                                         height: 2
                                         color: "#1db954"
-                                        visible: window.leftView !== "main"
+                                        visible: window.leftView === "playlists"
                                     }
                                 }
                             }
@@ -183,6 +213,11 @@ ApplicationWindow {
     Component {
         id: playlistsViewComp
         PlaylistsPage {}
+    }
+
+    Component {
+        id: searchViewComp
+        SearchPage {}
     }
 
     Component {

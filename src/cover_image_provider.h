@@ -18,8 +18,8 @@ public:
     void clear();
 
 private:
-    QByteArray coverData_;   // 原始图片数据
-    QImage cachedImage_;     // 解码缓存，避免重复解码
-    bool dirty_ = true;      // 数据变更标记
-    QMutex mutex_;           // 线程安全（QML 渲染线程与主线程并发访问）
+    QByteArray coverData_; // 原始图片数据
+    QImage cachedImage_;   // 解码缓存，避免重复解码
+    bool dirty_ = true;    // 数据变更标记
+    QMutex mutex_;         // 线程安全（QML 渲染线程与主线程并发访问）
 };

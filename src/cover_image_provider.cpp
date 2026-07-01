@@ -2,8 +2,7 @@
 
 CoverImageProvider::CoverImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image)
-{
-}
+{}
 
 QImage CoverImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
