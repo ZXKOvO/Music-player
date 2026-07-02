@@ -598,16 +598,54 @@ ApplicationWindow {
 
     function playNext() {
         if (playlistModel.count === 0) return
-        var next = window.currentIndex + 1
-        if (next >= playlistModel.count) next = 0
+        var next
+        switch (playlistModel.playMode) {
+        case 0:
+            next = window.currentIndex + 1
+            if (next >= playlistModel.count) next = 0
+            break
+        case 1:
+            next = window.currentIndex
+            break
+        case 2:
+            next = Math.floor(Math.random() * playlistModel.count)
+            if (playlistModel.count > 1) {
+                while (next === window.currentIndex) {
+                    next = Math.floor(Math.random() * playlistModel.count)
+                }
+            }
+            break
+        default:
+            next = window.currentIndex
+            break
+        }
         window.currentIndex = next
         player.playFile(playlistModel.filePath(next))
     }
 
     function playPrevious() {
         if (playlistModel.count === 0) return
-        var prev = window.currentIndex - 1
-        if (prev < 0) prev = playlistModel.count - 1
+        var prev
+        switch (playlistModel.playMode) {
+        case 0:
+            prev = window.currentIndex - 1
+            if (prev < 0) prev = playlistModel.count - 1
+            break
+        case 1:
+            prev = window.currentIndex
+            break
+        case 2:
+            prev = Math.floor(Math.random() * playlistModel.count)
+            if (playlistModel.count > 1) {
+                while (prev === window.currentIndex) {
+                    prev = Math.floor(Math.random() * playlistModel.count)
+                }
+            }
+            break
+        default:
+            prev = window.currentIndex
+            break
+        }
         window.currentIndex = prev
         player.playFile(playlistModel.filePath(prev))
     }
