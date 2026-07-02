@@ -44,13 +44,17 @@ ApplicationWindow {
         Component.onCompleted: registerCoverProvider() // 注册封面 ImageProvider 到 QML 引擎
     }
 
+    // 在线歌曲搜索器：处理搜索、下载、播放逻辑
     SongSearcher {
         id: songSearcher
-        property bool pendingPlay: false
+
+        // 歌曲下载完成回调
         onSongUrlReady: function(filePath, songName, artist) {
+            // 如果播放列表中没有此歌曲，则添加
             if (!playlistModel.contains(filePath)) {
                 playlistModel.addFile(filePath)
             }
+            // 如果是播放模式，自动播放该歌曲
             if (pendingPlay) {
                 pendingPlay = false
                 var idx = playlistModel.indexOf(filePath)
@@ -61,6 +65,8 @@ ApplicationWindow {
             }
             window.showToast(qsTr("已添加: %1").arg(songName))
         }
+
+        // 歌曲下载失败回调
         onSongUrlFailed: function(songName, reason) {
             window.showToast(qsTr("获取歌曲失败: %1").arg(reason))
         }

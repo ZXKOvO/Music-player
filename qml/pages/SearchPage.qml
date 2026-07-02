@@ -7,7 +7,7 @@ ColumnLayout {
     id: root
     spacing: 0
 
-    // Search bar
+    // 搜索栏：输入关键词，点击搜索或按回车触发搜索
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 52
@@ -21,6 +21,7 @@ ColumnLayout {
             anchors.bottomMargin: 8
             spacing: 8
 
+            // 搜索输入框
             TextField {
                 id: searchField
                 Layout.fillWidth: true
@@ -34,9 +35,10 @@ ColumnLayout {
                     border.color: searchField.activeFocus ? "#1db954" : "#e0e0e0"
                     border.width: 1
                 }
-                onAccepted: songSearcher.search(text)
+                onAccepted: songSearcher.search(text)  // 按回车触发搜索
             }
 
+            // 搜索按钮
             Button {
                 text: qsTr("搜索")
                 Layout.fillHeight: true
@@ -59,13 +61,14 @@ ColumnLayout {
         }
     }
 
+    // 分隔线
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 1
         color: "#e0e0e0"
     }
 
-    // Search status indicator
+    // 搜索状态指示器：显示"搜索中..."或错误信息
     RowLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 36
@@ -88,21 +91,22 @@ ColumnLayout {
         }
     }
 
-    // Search results list
+    // 搜索结果列表
     ListView {
         id: resultView
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
-        model: songSearcher.model
+        model: songSearcher.model  // 绑定搜索结果模型
         spacing: 0
 
+        // 每行歌曲条目
         delegate: Rectangle {
             width: resultView.width
             height: 56
             color: resultHover.hovered ? "#f0f0f0" : "transparent"
 
-            property int songDuration: duration
+            property int songDuration: duration  // 歌曲时长（秒）
 
             HoverHandler {
                 id: resultHover
@@ -114,7 +118,7 @@ ColumnLayout {
                 anchors.rightMargin: 12
                 spacing: 12
 
-                // Index number
+                // 序号
                 Label {
                     text: (index + 1)
                     color: "#999999"
@@ -123,11 +127,12 @@ ColumnLayout {
                     horizontalAlignment: Text.AlignRight
                 }
 
-                // Song info column
+                // 歌曲信息列：歌名 + 艺术家 · 专辑 · 时长
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
 
+                    // 歌曲名
                     Label {
                         text: name || ""
                         color: "#000000"
@@ -136,6 +141,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                     }
 
+                    // 歌手、专辑、时长（用 · 分隔）
                     Label {
                         text: {
                             var parts = []
@@ -153,19 +159,19 @@ ColumnLayout {
                     }
                 }
 
-                // Play button (visible on hover)
+                // 播放按钮（悬停时显示）
                 Button {
                     flat: true
                     implicitWidth: 32
                     implicitHeight: 32
                     visible: resultHover.hovered
                     onClicked: {
-                        songSearcher.pendingPlay = true
+                        songSearcher.pendingPlay = true  // 标记为播放模式
                         window.showToast(qsTr("正在获取歌曲..."))
                         songSearcher.getSongUrl(songId, name, artist)
                     }
                     contentItem: Label {
-                        text: "\u25B6"
+                        text: "\u25B6"  // 播放图标
                         color: "#1db954"
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
@@ -177,19 +183,19 @@ ColumnLayout {
                     }
                 }
 
-                // Add to playlist button (visible on hover)
+                // 添加到播放列表按钮（悬停时显示）
                 Button {
                     flat: true
                     implicitWidth: 32
                     implicitHeight: 32
                     visible: resultHover.hovered
                     onClicked: {
-                        songSearcher.pendingPlay = false
+                        songSearcher.pendingPlay = false  // 标记为添加模式
                         window.showToast(qsTr("正在获取歌曲..."))
                         songSearcher.getSongUrl(songId, name, artist)
                     }
                     contentItem: Label {
-                        text: "+"
+                        text: "+"  // 添加图标
                         color: "#1db954"
                         font.pixelSize: 18
                         font.bold: true
@@ -204,7 +210,7 @@ ColumnLayout {
             }
         }
 
-        // Empty state label
+        // 空状态提示：无搜索结果时显示
         Label {
             anchors.centerIn: parent
             visible: songSearcher.model.count === 0 && !songSearcher.searching

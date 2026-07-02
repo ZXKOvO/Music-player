@@ -4,8 +4,9 @@ project(MusicPlayer VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # 生成 compile_commands.json，供 IDE 使用
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Network)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network Qml)
 find_package(PkgConfig REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.9)
@@ -77,7 +78,7 @@ target_include_directories(MusicPlayer PRIVATE
 )
 
 target_link_libraries(MusicPlayer
-    PRIVATE Qt6::Quick Qt6::Network
+    PRIVATE Qt6::Quick Qt6::Network Qt6::Qml
     ${AV_LIBRARIES}
     ${SDL2_LIBRARIES}
 )
