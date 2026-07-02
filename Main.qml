@@ -16,6 +16,7 @@ ApplicationWindow {
     property string leftView: "main"
     property int detailSongCount: 0
     property int playlistSongVersion: 0
+    property bool isAnyPopupOpen: false
 
     PlaylistModel { id: playlistModel }
 
@@ -282,7 +283,8 @@ ApplicationWindow {
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
         width: 320
-        onOpened: playlistNameInput.text = ""
+        onOpened: { playlistNameInput.text = ""; window.isAnyPopupOpen = true }
+        onClosed: window.isAnyPopupOpen = false
         onAccepted: {
             var name = playlistNameInput.text.trim()
             if (name.length > 0) {
@@ -314,6 +316,8 @@ ApplicationWindow {
         height: Math.min(400, addToPlaylistColumn.height + 24)
         modal: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        onOpened: window.isAnyPopupOpen = true
+        onClosed: window.isAnyPopupOpen = false
 
         background: Rectangle {
             color: "#ffffff"
@@ -381,7 +385,9 @@ ApplicationWindow {
                     TapHandler {
                         onTapped: {
                             if (!alreadyAdded) {
-                                if (!playlistManager.addSongToCurrentPlaylist(filePath)) {
+                                if (playlistManager.addSongToCurrentPlaylist(filePath)) {
+                                    window.showToast(qsTr("已添加到歌单"))
+                                } else {
                                     window.showToast(qsTr("该歌曲已在歌单中"))
                                 }
                             } else {
@@ -432,9 +438,12 @@ ApplicationWindow {
         id: favoritePopup
         anchors.centerIn: parent
         width: 300
-        height: Math.min(360, favoriteColumn.height + 24)
+        height: Math.min(360, favoriteColumn.implicitHeight + 24)
         modal: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        onOpened: window.isAnyPopupOpen = true
+        onClosed: window.isAnyPopupOpen = false
+        padding: 12
 
         background: Rectangle {
             color: "#ffffff"
@@ -449,10 +458,7 @@ ApplicationWindow {
 
             RowLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: 12
-                Layout.rightMargin: 12
-                Layout.topMargin: 12
-                Layout.bottomMargin: 8
+                spacing: 8
                 Label {
                     text: qsTr("收藏到歌单")
                     color: "#000000"
@@ -483,8 +489,6 @@ ApplicationWindow {
 
             Label {
                 Layout.fillWidth: true
-                Layout.leftMargin: 12
-                Layout.rightMargin: 12
                 Layout.topMargin: 4
                 text: player.title || ""
                 color: "#888888"
@@ -500,7 +504,7 @@ ApplicationWindow {
                 spacing: 0
 
                 delegate: Rectangle {
-                    width: favoritePopup.width
+                    width: ListView.view.width
                     height: 44
                     color: favHover.hovered ? "#f0f0f0" : "transparent"
 
@@ -515,7 +519,9 @@ ApplicationWindow {
                             if (!alreadyIn) {
                                 var curFile = playlistModel.filePath(window.currentIndex)
                                 if (curFile !== "") {
-                                    if (!playlistManager.addSongToPlaylist(index, curFile)) {
+                                    if (playlistManager.addSongToPlaylist(index, curFile)) {
+                                        window.showToast(qsTr("已收藏到歌单"))
+                                    } else {
                                         window.showToast(qsTr("该歌曲已在歌单中"))
                                     }
                                 }
@@ -529,8 +535,6 @@ ApplicationWindow {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
                         spacing: 10
 
                         Rectangle {
@@ -582,6 +586,8 @@ ApplicationWindow {
             }
             if (count === 0 && paths.length > 0) {
                 window.showToast(qsTr("所选歌曲已全部在歌单中"))
+            } else if (count === paths.length) {
+                window.showToast(qsTr("已添加 %1 首歌曲").arg(count))
             } else if (paths.length > count) {
                 window.showToast(qsTr("已添加 %1 首，%2 首重复跳过").arg(count).arg(paths.length - count))
             }
@@ -633,7 +639,7 @@ ApplicationWindow {
         player.playFile(playlistModel.filePath(next))
     }
 
-    // Toast 提示
+    // 提示
     property string toastMessage: ""
     property bool toastVisible: false
 

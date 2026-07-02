@@ -66,6 +66,7 @@ Rectangle {
                 }
 
                 TapHandler {
+                    enabled: !window.isAnyPopupOpen
                     cursorShape: Qt.PointingHandCursor
                     onTapped: player.seek(player.lyrics.timeAt(lineIdx))
                 }
