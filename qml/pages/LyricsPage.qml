@@ -78,13 +78,13 @@ Rectangle {
                 }
             }
         }
+    }
 
-        Label {
-            Layout.alignment: Qt.AlignCenter
-            visible: player.lyrics.lineCount === 0
-            color: coverBg.visible ? "#cccccc" : "#999999"
-            font.pixelSize: 20
-            text: player.title ? "暂无歌词" : "请播放歌曲"
-        }
+    Label {
+        anchors.centerIn: parent
+        visible: player.lyrics.lineCount === 0
+        color: coverBg.visible ? "#cccccc" : "#999999"
+        font.pixelSize: 20
+        text: player.title ? "暂无歌词" : "请播放歌曲"
     }
 }

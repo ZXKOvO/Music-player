@@ -228,7 +228,7 @@ ApplicationWindow {
 
         ControlBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: 56
+            Layout.preferredHeight: Math.max(48, window.height * 0.11)
         }
     }
 
