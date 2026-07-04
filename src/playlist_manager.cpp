@@ -54,13 +54,29 @@ void PlaylistManager::renamePlaylist(int index, const QString &newName)
 }
 
 // 向指定歌单添加歌曲，按歌名自动去重，返回是否成功
+// 如果是在线缓存歌曲（music cache），自动复制到 playlist/songs/ 永久保存
 bool PlaylistManager::addSongToPlaylist(int playlistIndex, const QString &filePath)
 {
     if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
     if (containsSong(playlistIndex, filePath)) return false;
+
+    QString permanentPath = filePath;
+    QString cacheDir = QString(PROJECT_SOURCE_DIR) + "/music cache";
+    if (filePath.startsWith(cacheDir)) {
+        QString songsDir = QString(PROJECT_SOURCE_DIR) + "/playlist/songs";
+        QDir().mkpath(songsDir);
+        QString fileName = QFileInfo(filePath).fileName();
+        permanentPath = songsDir + "/" + fileName;
+        // 检查永久路径是否已在歌单中
+        if (containsSong(playlistIndex, permanentPath)) return false;
+        if (!QFile::exists(permanentPath)) {
+            QFile::copy(filePath, permanentPath);
+        }
+    }
+
     Song s;
-    s.filePath = filePath;
-    s.title = QFileInfo(filePath).completeBaseName();
+    s.filePath = permanentPath;
+    s.title = QFileInfo(permanentPath).completeBaseName();
     playlists_[playlistIndex].songs.append(s);
     QModelIndex idx = createIndex(playlistIndex, 0);
     emit dataChanged(idx, idx, {SongCountRole});
