@@ -88,6 +88,11 @@ target_compile_options(MusicPlayer PRIVATE
     ${SDL2_CFLAGS_OTHER}
 )
 
+# 定义项目源代码根目录，用于在线歌曲缓存路径
+target_compile_definitions(MusicPlayer PRIVATE
+    PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 set(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}" CACHE PATH "Install path prefix" FORCE)
 install(TARGETS MusicPlayer
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

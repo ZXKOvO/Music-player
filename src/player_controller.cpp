@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QQmlEngine>
 #include <QQmlContext>
+#include <QDir>
 
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
@@ -39,11 +40,19 @@ PlayerController::PlayerController(QObject *parent)
     }
 }
 
-// 析构时停止解码线程、关闭音频设备和 SDL
+// 析构时停止解码线程、关闭音频设备和 SDL，并清空缓存
 PlayerController::~PlayerController()
 {
     stopDecoding();
     audioOutput_.close();
+
+    // 清空在线歌曲缓存目录
+    QString cacheDir = QString(PROJECT_SOURCE_DIR) + "/music cache";
+    QDir dir(cacheDir);
+    if (dir.exists()) {
+        dir.removeRecursively();
+        qDebug() << "Music cache cleared:" << cacheDir;
+    }
 }
 
 // 播放指定文件路径，支持 file:/// URL 或本地路径
