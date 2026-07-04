@@ -184,7 +184,7 @@ QHash<int, QByteArray> PlaylistManager::roleNames() const
 
 QString PlaylistManager::savePath() const
 {
-    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/playlists.json";
+    return QString(PROJECT_SOURCE_DIR) + "/playlist/playlists.json";
 }
 
 void PlaylistManager::saveToFile()

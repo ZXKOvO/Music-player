@@ -1,10 +1,22 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 
 Rectangle {
     id: root
     color: "#1a1a1a"
+
+    // 双击切换全屏
+    TapHandler {
+        onDoubleTapped: {
+            if (window.visibility === Window.FullScreen) {
+                window.showNormal()
+            } else {
+                window.showFullScreen()
+            }
+        }
+    }
 
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) return "0:00"
