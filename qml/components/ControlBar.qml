@@ -296,9 +296,16 @@ Rectangle {
                 }
 
                 Button {
+                    id: playModeBtn
                     implicitWidth: 26
                     implicitHeight: 26
-                    onClicked: playlistModel.nextPlayMode()
+                    onClicked: {
+                        playlistModel.nextPlayMode()
+                        var modeNames = [qsTr("列表循环"), qsTr("单曲循环"), qsTr("随机播放")]
+                        modeToolTip.text = modeNames[playlistModel.playMode]
+                        modeToolTip.visible = true
+                        modeToolTipTimer.restart()
+                    }
                     contentItem: Item {
                         Image {
                             anchors.centerIn: parent
@@ -312,6 +319,33 @@ Rectangle {
                     background: Rectangle {
                         color: parent.hovered ? "#444444" : "transparent"
                         radius: 4
+                    }
+
+                    Rectangle {
+                        id: modeToolTip
+                        property string text: ""
+                        visible: false
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: 4
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: modeToolTipLabel.implicitWidth + 16
+                        height: 24
+                        color: "#cc333333"
+                        radius: 4
+
+                        Label {
+                            id: modeToolTipLabel
+                            anchors.centerIn: parent
+                            text: modeToolTip.text
+                            color: "#ffffff"
+                            font.pixelSize: 11
+                        }
+                    }
+
+                    Timer {
+                        id: modeToolTipTimer
+                        interval: 1500
+                        onTriggered: modeToolTip.visible = false
                     }
                 }
 
