@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QDir>
+#include <utility>
 #include <QDateTime>
 #include <QtMath>
 #include <QDebug>
@@ -61,7 +62,7 @@ void LyricsFetcher::fetchLyrics(const QString &title, const QString &artist, dou
 
 void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
                                      const QString &title,
-                                     const QString &artist,
+                                     const QString &,
                                      double audioDurationSec,
                                      int requestId)
 {
@@ -97,7 +98,7 @@ void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
     QString bestName;
     double bestDiff = 1e9;
 
-    for (const auto &s : songs) {
+    for (const auto &s : std::as_const(songs)) {
         QJsonObject song = s.toObject();
         QString songName = song.value("name").toString();
         int id = song.value("id").toInt();
@@ -123,7 +124,7 @@ void LyricsFetcher::onSearchFinished(QNetworkReply *reply,
 
     if (bestId == -1 && audioDurationSec > 0) {
         bestDiff = 1e9;
-        for (const auto &s : songs) {
+        for (const auto &s : std::as_const(songs)) {
             QJsonObject song = s.toObject();
             QString songName = song.value("name").toString();
             int id = song.value("id").toInt();

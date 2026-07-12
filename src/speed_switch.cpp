@@ -75,7 +75,7 @@ bool SpeedSwitch::buildFilter(double speed)
              sizeof(srcArgs),
              "sample_rate=%d:sample_fmt=flt:channel_layout=0x%llx",
              sampleRate_,
-             (unsigned long long) layout.u.mask);
+             static_cast<unsigned long long>(layout.u.mask));
 
     int err = avfilter_graph_create_filter(&srcCtx_, src, "src", srcArgs, nullptr, graph_);
     if (err < 0) {
@@ -90,8 +90,11 @@ bool SpeedSwitch::buildFilter(double speed)
     }
 
     // 强制 sink 输出 packed float32，避免 atempo 输出 planar 导致数据错位
-    AVSampleFormat sampleFmts[] = {AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_NONE};
-    av_opt_set_int_list(sinkCtx_, "sample_fmts", (const int *) sampleFmts, AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
+    int sampleFmts[] = {static_cast<int>(AV_SAMPLE_FMT_FLT), static_cast<int>(AV_SAMPLE_FMT_NONE)};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+    av_opt_set_int_list(sinkCtx_, "sample_fmts", sampleFmts, AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
+#pragma GCC diagnostic pop
 
     AVFilterInOut *outputs = avfilter_inout_alloc();
     AVFilterInOut *inputs = avfilter_inout_alloc();
@@ -158,7 +161,7 @@ int SpeedSwitch::process(const float *input, int inputSamples, float *outputBuf,
         inFrame->sample_rate = sampleRate_;
 
         if (av_frame_get_buffer(inFrame, 0) < 0) break;
-        std::memcpy(inFrame->data[0], input + pos, chunk * sizeof(float));
+        std::memcpy(inFrame->data[0], input + pos, static_cast<size_t>(chunk) * sizeof(float));
         pos += chunk;
 
         int ret = av_buffersrc_add_frame_flags(srcCtx_, inFrame, AV_BUFFERSRC_FLAG_KEEP_REF);
@@ -204,7 +207,7 @@ int SpeedSwitch::drainOutput(float *outputBuf, int outputBufSize)
             if (totalOut + outSamples <= outputBufSize) {
                 float *dst = outputBuf + totalOut;
                 for (int ch = 0; ch < channels; ++ch) {
-                    const float *src = (const float *) outFrame->extended_data[ch];
+                    const float *src = reinterpret_cast<const float *>(outFrame->extended_data[ch]);
                     for (int s = 0; s < frames; ++s) {
                         dst[s * channels + ch] = src[s];
                     }
@@ -214,7 +217,7 @@ int SpeedSwitch::drainOutput(float *outputBuf, int outputBufSize)
         } else {
             outSamples = outFrame->nb_samples * channels;
             if (totalOut + outSamples <= outputBufSize) {
-                std::memcpy(outputBuf + totalOut, outFrame->data[0], outSamples * sizeof(float));
+                std::memcpy(outputBuf + totalOut, outFrame->data[0], static_cast<size_t>(outSamples) * sizeof(float));
                 totalOut += outSamples;
             }
         }

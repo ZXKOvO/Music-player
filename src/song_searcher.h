@@ -13,9 +13,9 @@ class SongSearcher : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(SearchResultModel *model READ model CONSTANT)       // 搜索结果模型
-    Q_PROPERTY(bool searching READ searching NOTIFY searchingChanged) // 是否正在搜索
-    Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged) // 错误信息
+    Q_PROPERTY(SearchResultModel *model READ model CONSTANT)                                     // 搜索结果模型
+    Q_PROPERTY(bool searching READ searching NOTIFY searchingChanged)                            // 是否正在搜索
+    Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged)                // 错误信息
     Q_PROPERTY(bool pendingPlay READ pendingPlay WRITE setPendingPlay NOTIFY pendingPlayChanged) // 播放/添加模式
 
 public:
@@ -25,7 +25,11 @@ public:
     bool searching() const { return searching_; }
     QString errorMessage() const { return errorMessage_; }
     bool pendingPlay() const { return pendingPlay_; }
-    void setPendingPlay(bool pending) { pendingPlay_ = pending; emit pendingPlayChanged(); }
+    void setPendingPlay(bool pending)
+    {
+        pendingPlay_ = pending;
+        emit pendingPlayChanged();
+    }
 
     // 搜索歌曲
     Q_INVOKABLE void search(const QString &keyword);
@@ -45,10 +49,10 @@ private:
     // 过滤可播放歌曲：通过API批量查询歌曲播放状态
     void filterPlayable(const QList<SearchResult> &candidates, int requestId);
 
-    QNetworkAccessManager *netMgr_;      // 网络管理器
-    SearchResultModel *model_;           // 搜索结果数据模型
-    bool searching_ = false;            // 搜索状态标志
-    QString errorMessage_;              // 错误信息
-    bool pendingPlay_ = false;          // 播放/添加模式标志
-    int searchRequestId_ = 0;           // 请求ID，用于防止旧请求干扰
+    QNetworkAccessManager *netMgr_; // 网络管理器
+    SearchResultModel *model_;      // 搜索结果数据模型
+    bool searching_ = false;        // 搜索状态标志
+    QString errorMessage_;          // 错误信息
+    bool pendingPlay_ = false;      // 播放/添加模式标志
+    int searchRequestId_ = 0;       // 请求ID，用于防止旧请求干扰
 };

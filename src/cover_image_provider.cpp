@@ -4,8 +4,9 @@ CoverImageProvider::CoverImageProvider()
     : QQuickImageProvider(QQuickImageProvider::Image)
 {}
 
-QImage CoverImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
+QImage CoverImageProvider::requestImage(const QString &, QSize *size, const QSize &requestedSize)
 {
+    Q_UNUSED(requestedSize)
     QMutexLocker lock(&mutex_);
 
     if (coverData_.isEmpty()) {

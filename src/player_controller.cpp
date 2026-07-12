@@ -38,6 +38,10 @@ PlayerController::PlayerController(QObject *parent)
         SDL_Init(SDL_INIT_AUDIO);
         sdlInited = true;
     }
+
+    // 恢复上次保存的音量
+    float savedVol = settings_.value("volume", 1.0f).toFloat();
+    audioOutput_.setVolume(savedVol);
 }
 
 // 析构时停止解码线程、关闭音频设备和 SDL，并清空缓存
@@ -115,6 +119,9 @@ void PlayerController::playFile(const QString &filePath)
         decoder_.close();
         return;
     }
+
+    // 恢复全局音量（SDL 重新打开后可能重置）
+    audioOutput_.setVolume(settings_.value("volume", 1.0f).toFloat());
 
     // 启动解码线程并开始播放
     startDecoding();
@@ -220,6 +227,7 @@ float PlayerController::volume() const
 void PlayerController::setVolume(float vol)
 {
     audioOutput_.setVolume(vol);
+    settings_.setValue("volume", vol);
     emit volumeChanged();
 }
 
@@ -265,7 +273,7 @@ void PlayerController::registerCoverProvider()
 void PlayerController::onUpdatePosition()
 {
     if (!playing_) return;
-    double elapsed = (QDateTime::currentMSecsSinceEpoch() - startPts_) / 1000.0;
+    double elapsed = static_cast<double>(QDateTime::currentMSecsSinceEpoch() - startPts_) / 1000.0;
     position_ = qMin(elapsed * playbackSpeed_, duration_);
     emit positionChanged();
 
@@ -376,7 +384,7 @@ void PlayerController::stopDecoding()
 void PlayerController::parseFileName(const QString &filePath, QString &title, QString &artist)
 {
     QString baseName = QFileInfo(filePath).completeBaseName();
-    int sep = baseName.indexOf(" - ");
+    int sep = static_cast<int>(baseName.indexOf(" - "));
     if (sep > 0) {
         artist = baseName.left(sep).trimmed();
         title = baseName.mid(sep + 3).trimmed();

@@ -3,6 +3,7 @@
 #include <QTimer>
 #include <QThread>
 #include <QUrl>
+#include <QSettings>
 #include <QtQml/qqmlregistration.h>
 #include "audio_decoder.h"
 #include "sdl_audio_output.h"
@@ -106,4 +107,5 @@ private:
     LyricsFetcher *lyricsFetcher_;
     qint64 startPts_ = 0;
     double playbackSpeed_ = 1.0;
+    QSettings settings_;
 };

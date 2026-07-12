@@ -37,7 +37,7 @@ public:
     QString filePath() const { return filePath_; }
     void setFilePath(const QString &path);
 
-    int lineCount() const { return lines_.size(); }
+    int lineCount() const { return static_cast<int>(lines_.size()); }
 
     Q_INVOKABLE bool load(const QString &path);
     Q_INVOKABLE bool loadFromString(const QString &lrcContent);

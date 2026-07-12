@@ -67,7 +67,7 @@ float SDLAudioOutput::volume() const
 void SDLAudioOutput::audioCallback(void *userdata, uint8_t *stream, int len)
 {
     auto *self = static_cast<SDLAudioOutput *>(userdata);
-    SDL_memset(stream, 0, len);
+    SDL_memset(stream, 0, static_cast<size_t>(len));
     if (!self->ringBuf_) return;
 
     self->ringBuf_->read(stream, static_cast<size_t>(len));

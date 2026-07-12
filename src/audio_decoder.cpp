@@ -43,7 +43,8 @@ bool AudioDecoder::open(const QString &filePath)
     }
 
     // 计算时长（秒）
-    duration_ = fmtCtx_->streams[streamIdx_]->duration * av_q2d(fmtCtx_->streams[streamIdx_]->time_base);
+    duration_ = static_cast<double>(fmtCtx_->streams[streamIdx_]->duration)
+                * av_q2d(fmtCtx_->streams[streamIdx_]->time_base);
 
     // 初始化重采样器，将任意输入格式转换为统一的 FLT32/44100Hz/双声道
     if (!initResampler()) {
@@ -108,7 +109,7 @@ int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize)
     int totalRead = 0;
 
     // 每个采样占用的字节数 = 声道数 × float大小
-    int bytesPerSample = outputFormat_.channels * sizeof(float);
+    int bytesPerSample = static_cast<int>(static_cast<size_t>(outputFormat_.channels) * sizeof(float));
 
     // 循环读取 packet → 解码 → 重采样，直到填满 buffer 或文件结束
     while (totalRead < bufferSize) {
@@ -148,7 +149,7 @@ int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize)
             int outSamples = swr_convert(swrCtx_,
                                          &outBuf,
                                          maxOutSamples,
-                                         (const uint8_t **) frame->extended_data,
+                                         const_cast<const uint8_t **>(frame->extended_data),
                                          frame->nb_samples);
 
             if (outSamples > 0) { totalRead += outSamples * bytesPerSample; }
@@ -168,7 +169,7 @@ bool AudioDecoder::seek(double positionSec)
     seeking_.store(true);
 
     // 将秒转换为流内部时间戳，向最近的关键帧 seek
-    int64_t ts = positionSec / av_q2d(fmtCtx_->streams[streamIdx_]->time_base);
+    int64_t ts = static_cast<int64_t>(positionSec / av_q2d(fmtCtx_->streams[streamIdx_]->time_base));
     int ret = avformat_seek_file(fmtCtx_, streamIdx_, INT64_MIN, ts, INT64_MAX, AVSEEK_FLAG_BACKWARD);
 
     if (ret >= 0) {
@@ -244,16 +245,16 @@ QByteArray AudioDecoder::coverData() const
     if (result.isEmpty() && coverCtx->metadata) {
         AVDictionaryEntry *tag = av_dict_get(coverCtx->metadata, "METADATA_BLOCK_PICTURE", nullptr, 0);
         if (tag) {
-            QByteArray raw(tag->value, strlen(tag->value));
-            int jpegStart = raw.indexOf("\xff\xd8");
+            QByteArray raw(tag->value, static_cast<int>(strlen(tag->value)));
+            int jpegStart = static_cast<int>(raw.indexOf("\xff\xd8"));
             if (jpegStart >= 0) {
-                int jpegEnd = raw.indexOf("\xff\xd9", jpegStart);
+                int jpegEnd = static_cast<int>(raw.indexOf("\xff\xd9", jpegStart));
                 if (jpegEnd >= 0) { result = raw.mid(jpegStart, jpegEnd - jpegStart + 2); }
             }
             if (result.isEmpty()) {
-                int pngStart = raw.indexOf("\x89PNG");
+                int pngStart = static_cast<int>(raw.indexOf("\x89PNG"));
                 if (pngStart >= 0) {
-                    int pngEnd = raw.indexOf("IEND", pngStart);
+                    int pngEnd = static_cast<int>(raw.indexOf("IEND", pngStart));
                     if (pngEnd >= 0) { result = raw.mid(pngStart, pngEnd - pngStart + 4 + 4); }
                 }
             }

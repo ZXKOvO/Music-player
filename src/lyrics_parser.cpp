@@ -4,6 +4,7 @@
 #include <QRegularExpression>
 #include <QFileInfo>
 #include <QDebug>
+#include <utility>
 
 LyricsParser::LyricsParser(QObject *parent)
     : QObject(parent)
@@ -62,7 +63,7 @@ bool LyricsParser::parseYrcContent(const QString &content)
     QStringList lineList = content.split('\n');
     bool found = false;
 
-    for (const QString &line : lineList) {
+    for (const QString &line : std::as_const(lineList)) {
         QString trimmed = line.trimmed();
         if (trimmed.isEmpty()) continue;
 
@@ -93,7 +94,7 @@ bool LyricsParser::parseYrcContent(const QString &content)
                 double wStartSec = wStartMs / 1000.0;
                 double wDurSec = wDurMs / 1000.0;
                 // 多字词按字数均分持续时间
-                double charDur = wDurSec / wordText.length();
+                double charDur = wDurSec / static_cast<double>(wordText.length());
 
                 li.text += wordText;
                 for (int c = 0; c < wordText.length(); c++) {
@@ -101,11 +102,11 @@ bool LyricsParser::parseYrcContent(const QString &content)
                 }
             }
 
-            pos = wm.capturedEnd();
+            pos = static_cast<int>(wm.capturedEnd());
         }
 
         // 数据一致性检查：charInfos 数量应等于 text 字符数
-        if (li.charInfos.size() != li.text.length()) { li.charInfos.clear(); }
+        if (li.charInfos.size() != static_cast<qsizetype>(li.text.length())) { li.charInfos.clear(); }
 
         lines_.append(li);
     }
@@ -130,7 +131,7 @@ bool LyricsParser::loadFromString(const QString &lrcContent)
     QRegularExpression re(R"(\[(\d{1,3}):(\d{2})\.(\d{2,3})\](.*))");
 
     QStringList lineList = lrcContent.split('\n');
-    for (const QString &line : lineList) {
+    for (const QString &line : std::as_const(lineList)) {
         QString trimmed = line.trimmed();
         if (trimmed.isEmpty()) continue;
 
@@ -167,14 +168,14 @@ bool LyricsParser::loadFromString(const QString &lrcContent)
     });
 
     // 计算每行持续时间（下一行开始时间 - 当前行开始时间）
-    for (int i = 0; i < lines_.size() - 1; i++) {
+    for (int i = 0; i < static_cast<int>(lines_.size()) - 1; i++) {
         lines_[i].durationSec = lines_[i + 1].startSec - lines_[i].startSec;
     }
     if (!lines_.isEmpty()) { lines_.last().durationSec = 3.0; }
 
     // LRC 模式：按字数均分生成 charInfos（等分时间，非真正逐字）
     for (auto &line : lines_) {
-        int n = line.text.length();
+        int n = static_cast<int>(line.text.length());
         if (n == 0) continue;
         double dur = line.durationSec / n;
         for (int i = 0; i < n; i++) {
@@ -198,7 +199,7 @@ int LyricsParser::lineAt(double seconds) const
 {
     if (lines_.isEmpty()) return -1;
 
-    int lo = 0, hi = lines_.size() - 1;
+    int lo = 0, hi = static_cast<int>(lines_.size()) - 1;
     int result = -1;
 
     while (lo <= hi) {
@@ -216,13 +217,13 @@ int LyricsParser::lineAt(double seconds) const
 
 double LyricsParser::timeAt(int index) const
 {
-    if (index < 0 || index >= lines_.size()) return 0.0;
+    if (index < 0 || index >= static_cast<int>(lines_.size())) return 0.0;
     return lines_[index].startSec;
 }
 
 QString LyricsParser::textAt(int index) const
 {
-    if (index < 0 || index >= lines_.size()) return QString();
+    if (index < 0 || index >= static_cast<int>(lines_.size())) return QString();
     return lines_[index].text;
 }
 
@@ -231,11 +232,11 @@ QString LyricsParser::textAt(int index) const
 // 逐行模式(LRC)：按行内位置等分
 int LyricsParser::charIndexAt(double seconds, int lineIndex) const
 {
-    if (lineIndex < 0 || lineIndex >= lines_.size()) return -1;
+    if (lineIndex < 0 || lineIndex >= static_cast<int>(lines_.size())) return -1;
     const LineInfo &line = lines_[lineIndex];
     if (line.text.isEmpty()) return -1;
 
-    int charCount = line.text.length();
+    int charCount = static_cast<int>(line.text.length());
 
     // 逐字模式：charInfos 有真实时间戳，逐个匹配
     if (!line.charInfos.isEmpty() && line.charInfos.size() == charCount) {

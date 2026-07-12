@@ -8,6 +8,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <utility>
 #include <QRegularExpression>
 #include <QDebug>
 
@@ -22,7 +23,7 @@ void SongSearcher::search(const QString &keyword)
 {
     if (keyword.trimmed().isEmpty()) return;
 
-    int reqId = ++searchRequestId_;  // 递增请求ID，用于标识当前请求
+    int reqId = ++searchRequestId_; // 递增请求ID，用于标识当前请求
 
     if (!searching_) {
         searching_ = true;
@@ -36,10 +37,10 @@ void SongSearcher::search(const QString &keyword)
     // 构建搜索请求URL
     QUrl url("https://music.163.com/api/search/get");
     QUrlQuery params;
-    params.addQueryItem("s", keyword.trimmed());  // 搜索关键词
-    params.addQueryItem("type", "1");             // 类型1表示歌曲
-    params.addQueryItem("limit", "30");           // 返回30条结果
-    params.addQueryItem("offset", "0");           // 从第0条开始
+    params.addQueryItem("s", keyword.trimmed()); // 搜索关键词
+    params.addQueryItem("type", "1");            // 类型1表示歌曲
+    params.addQueryItem("limit", "30");          // 返回30条结果
+    params.addQueryItem("offset", "0");          // 从第0条开始
     url.setQuery(params);
 
     QNetworkRequest req(url);
@@ -69,19 +70,19 @@ void SongSearcher::search(const QString &keyword)
 
         // 提取歌曲信息，构建候选列表
         QList<SearchResult> candidates;
-        for (const auto &s : songs) {
+        for (const auto &s : std::as_const(songs)) {
             QJsonObject song = s.toObject();
             SearchResult r;
             r.songId = song.value("id").toInt();
             r.name = song.value("name").toString();
             r.album = song.value("album").toObject().value("name").toString();
-            r.duration = song.value("duration").toInt() / 1000;  // 毫秒转秒
+            r.duration = song.value("duration").toInt() / 1000; // 毫秒转秒
             r.coverUrl = song.value("album").toObject().value("picUrl").toString();
 
             // 提取歌手名称，多个用逗号分隔
             QJsonArray artists = song.value("artists").toArray();
             QStringList artistNames;
-            for (const auto &a : artists) {
+            for (const auto &a : std::as_const(artists)) {
                 artistNames.append(a.toObject().value("name").toString());
             }
             r.artist = artistNames.join(", ");
@@ -142,22 +143,18 @@ void SongSearcher::filterPlayable(const QList<SearchResult> &candidates, int req
 
         // 构建可播放歌曲ID集合（code==200且url!=null表示可播放）
         QSet<int> playableIds;
-        for (const auto &info : urlInfos) {
+        for (const auto &info : std::as_const(urlInfos)) {
             QJsonObject obj = info.toObject();
             int id = obj.value("id").toInt();
             int code = obj.value("code").toInt();
             QJsonValue urlVal = obj.value("url");
-            if (code == 200 && !urlVal.isNull() && !urlVal.isUndefined()) {
-                playableIds.insert(id);
-            }
+            if (code == 200 && !urlVal.isNull() && !urlVal.isUndefined()) { playableIds.insert(id); }
         }
 
         // 只保留可播放的歌曲
         QList<SearchResult> filtered;
-        for (const auto &r : candidates) {
-            if (playableIds.contains(r.songId)) {
-                filtered.append(r);
-            }
+        for (const auto &r : std::as_const(candidates)) {
+            if (playableIds.contains(r.songId)) { filtered.append(r); }
         }
 
         qDebug() << "SongSearcher:" << filtered.size() << "of" << candidates.size() << "songs playable";

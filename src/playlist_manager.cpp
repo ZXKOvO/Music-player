@@ -6,6 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QStandardPaths>
+#include <utility>
 
 PlaylistManager::PlaylistManager(QObject *parent)
     : QAbstractListModel(parent)
@@ -16,7 +17,7 @@ PlaylistManager::PlaylistManager(QObject *parent)
 // 创建新歌单
 void PlaylistManager::createPlaylist(const QString &name)
 {
-    beginInsertRows({}, playlists_.size(), playlists_.size());
+    beginInsertRows({}, static_cast<int>(playlists_.size()), static_cast<int>(playlists_.size()));
     UserPlaylist pl;
     pl.name = name;
     playlists_.append(pl);
@@ -69,9 +70,7 @@ bool PlaylistManager::addSongToPlaylist(int playlistIndex, const QString &filePa
         permanentPath = songsDir + "/" + fileName;
         // 检查永久路径是否已在歌单中
         if (containsSong(playlistIndex, permanentPath)) return false;
-        if (!QFile::exists(permanentPath)) {
-            QFile::copy(filePath, permanentPath);
-        }
+        if (!QFile::exists(permanentPath)) { QFile::copy(filePath, permanentPath); }
     }
 
     Song s;
@@ -112,7 +111,7 @@ QString PlaylistManager::playlistName(int index) const
 int PlaylistManager::playlistSongCount(int index) const
 {
     if (index < 0 || index >= playlists_.size()) return 0;
-    return playlists_[index].songs.size();
+    return static_cast<int>(playlists_[index].songs.size());
 }
 
 QString PlaylistManager::songFilePath(int playlistIndex, int songIndex) const
@@ -134,7 +133,7 @@ QString PlaylistManager::songTitle(int playlistIndex, int songIndex) const
 bool PlaylistManager::containsSong(int playlistIndex, const QString &filePath) const
 {
     if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
-    for (const auto &s : playlists_[playlistIndex].songs) {
+    for (const auto &s : std::as_const(playlists_[playlistIndex].songs)) {
         if (s.filePath == filePath) return true;
     }
     return false;
@@ -143,7 +142,7 @@ bool PlaylistManager::containsSong(int playlistIndex, const QString &filePath) c
 bool PlaylistManager::containsSongByTitle(int playlistIndex, const QString &title) const
 {
     if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
-    for (const auto &s : playlists_[playlistIndex].songs) {
+    for (const auto &s : std::as_const(playlists_[playlistIndex].songs)) {
         if (s.title == title) return true;
     }
     return false;
@@ -151,7 +150,7 @@ bool PlaylistManager::containsSongByTitle(int playlistIndex, const QString &titl
 
 int PlaylistManager::count() const
 {
-    return playlists_.size();
+    return static_cast<int>(playlists_.size());
 }
 
 int PlaylistManager::currentPlaylistIndex() const
@@ -176,7 +175,7 @@ QString PlaylistManager::currentPlaylistName() const
 int PlaylistManager::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid()) return 0;
-    return playlists_.size();
+    return static_cast<int>(playlists_.size());
 }
 
 QVariant PlaylistManager::data(const QModelIndex &index, int role) const
@@ -206,7 +205,7 @@ QString PlaylistManager::savePath() const
 void PlaylistManager::saveToFile()
 {
     QJsonArray playlistsArray;
-    for (const auto &pl : playlists_) {
+    for (const auto &pl : std::as_const(playlists_)) {
         QJsonObject plObj;
         plObj["name"] = pl.name;
         QJsonArray songsArray;
@@ -241,12 +240,12 @@ void PlaylistManager::loadFromFile()
     QJsonArray playlistsArray = root["playlists"].toArray();
     beginResetModel();
     playlists_.clear();
-    for (const auto &plVal : playlistsArray) {
+    for (const auto &plVal : std::as_const(playlistsArray)) {
         QJsonObject plObj = plVal.toObject();
         UserPlaylist pl;
         pl.name = plObj["name"].toString();
         QJsonArray songsArray = plObj["songs"].toArray();
-        for (const auto &songVal : songsArray) {
+        for (const auto &songVal : std::as_const(songsArray)) {
             QJsonObject songObj = songVal.toObject();
             Song s;
             s.filePath = songObj["filePath"].toString();

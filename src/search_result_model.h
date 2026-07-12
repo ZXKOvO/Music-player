@@ -20,17 +20,17 @@ class SearchResultModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(int count READ count NOTIFY countChanged)  // 结果数量
+    Q_PROPERTY(int count READ count NOTIFY countChanged) // 结果数量
 
 public:
     // 数据角色枚举，供QML delegate访问
     enum Roles {
-        SongIdRole = Qt::UserRole + 1,  // 歌曲ID
-        NameRole,                        // 歌曲名
-        ArtistRole,                      // 艺术家
-        AlbumRole,                       // 专辑
-        DurationRole,                    // 时长
-        CoverUrlRole                     // 封面URL
+        SongIdRole = Qt::UserRole + 1, // 歌曲ID
+        NameRole,                      // 歌曲名
+        ArtistRole,                    // 艺术家
+        AlbumRole,                     // 专辑
+        DurationRole,                  // 时长
+        CoverUrlRole                   // 封面URL
     };
 
     explicit SearchResultModel(QObject *parent = nullptr);
@@ -56,5 +56,5 @@ signals:
     void countChanged();
 
 private:
-    QList<SearchResult> results_;  // 搜索结果列表
+    QList<SearchResult> results_; // 搜索结果列表
 };

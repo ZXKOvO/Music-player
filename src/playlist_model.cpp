@@ -1,5 +1,6 @@
 #include "playlist_model.h"
 #include <QFileInfo>
+#include <utility>
 
 PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -8,7 +9,7 @@ PlaylistModel::PlaylistModel(QObject *parent)
 // 添加单个文件路径，自动提取文件名作为标题
 void PlaylistModel::addFile(const QString &filePath)
 {
-    beginInsertRows({}, songs_.size(), songs_.size());
+    beginInsertRows({}, static_cast<int>(songs_.size()), static_cast<int>(songs_.size()));
     Song s;
     s.filePath = filePath;
     s.title = QFileInfo(filePath).completeBaseName();
@@ -54,12 +55,12 @@ QString PlaylistModel::filePath(int row) const
 
 int PlaylistModel::count() const
 {
-    return songs_.size();
+    return static_cast<int>(songs_.size());
 }
 
 bool PlaylistModel::contains(const QString &filePath) const
 {
-    for (const auto &s : songs_) {
+    for (const auto &s : std::as_const(songs_)) {
         if (s.filePath == filePath) return true;
     }
     return false;
@@ -91,7 +92,7 @@ void PlaylistModel::nextPlayMode()
 int PlaylistModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid()) return 0;
-    return songs_.size();
+    return static_cast<int>(songs_.size());
 }
 
 // 根据 role 返回歌曲数据
