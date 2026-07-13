@@ -69,5 +69,5 @@ signals:
 
 private:
     QList<Song> songs_;
-    PlayMode playMode_ = RepeatOne; // 默认单曲循环
+    PlayMode playMode_ = LoopAll; // 默认列表循环
 };

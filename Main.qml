@@ -46,97 +46,213 @@ ApplicationWindow {
         Component.onCompleted: registerCoverProvider()
         onShowDesktopLyricsChanged: {
             if (showDesktopLyrics) {
-                desktopLyricsWindow.visible = true
+                ensureDesktopLyricsWindow().visible = true
             } else {
-                desktopLyricsWindow.visible = false
+                if (desktopLyricsObj) desktopLyricsObj.visible = false
             }
         }
     }
 
-    Window {
-        id: desktopLyricsWindow
-        width: 500
-        height: 80
-        visible: false
-        title: qsTr("桌面歌词")
-        color: "transparent"
-        flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
-        x: (Screen.width - width) / 2
-        y: Screen.height - height - 100
+    property var desktopLyricsObj: null
 
-        property int activeIndex: player.lyrics.lineAt(player.position)
-        property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
+    function ensureDesktopLyricsWindow() {
+        if (!desktopLyricsObj) {
+            desktopLyricsObj = desktopLyricsComponent.createObject(null)
+        }
+        return desktopLyricsObj
+    }
 
-        Rectangle {
-            anchors.fill: parent
-            color: "#cc1a1a1a"
-            radius: 10
+    Component {
+        id: desktopLyricsComponent
+        Window {
+            width: 500
+            height: 100
+            visible: true
+            title: qsTr("桌面歌词")
+            color: "transparent"
+            flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
+            x: (Screen.width - width) / 2
+            y: Screen.height - height - 100
 
-            Column {
-                anchors.centerIn: parent
-                spacing: 4
+            property int activeIndex: player.lyrics.lineAt(player.position)
+            property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
+            property point _dragPos: Qt.point(0, 0)
 
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 0
-
-                    Repeater {
-                        model: player.lyrics.textAt(desktopLyricsWindow.activeIndex) || ""
-
-                        Label {
-                            text: modelData
-                            color: index <= player.lyrics.charIndexAt(player.position, desktopLyricsWindow.activeIndex)
-                                   ? "#1db954" : "#cccccc"
-                            font.pixelSize: 20
-                            font.bold: index <= player.lyrics.charIndexAt(player.position, desktopLyricsWindow.activeIndex)
-                        }
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                onPressed: function(mouse) {
+                    _dragPos = Qt.point(mouse.x, mouse.y)
+                }
+                onPositionChanged: function(mouse) {
+                    if (pressed) {
+                        desktopLyricsWindow.x += mouse.x - _dragPos.x
+                        desktopLyricsWindow.y += mouse.y - _dragPos.y
                     }
                 }
+                z: -1
+            }
 
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
+            Rectangle {
+                anchors.fill: parent
+                color: "#cc1a1a1a"
+                radius: 10
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 1
                     spacing: 0
-                    visible: desktopLyricsWindow.nextIndex >= 0
 
-                    Repeater {
-                        model: player.lyrics.textAt(desktopLyricsWindow.nextIndex) || ""
+                    // 歌词区域
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 0
+
+                                Repeater {
+                                    model: player.lyrics.textAt(activeIndex) || ""
+
+                                    Label {
+                                        text: modelData
+                                        color: index <= player.lyrics.charIndexAt(player.position, activeIndex)
+                                               ? "#1db954" : "#cccccc"
+                                        font.pixelSize: 20
+                                        font.bold: index <= player.lyrics.charIndexAt(player.position, activeIndex)
+                                    }
+                                }
+                            }
+
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 0
+                                visible: nextIndex >= 0
+
+                                Repeater {
+                                    model: player.lyrics.textAt(nextIndex) || ""
+
+                                    Label {
+                                        text: modelData
+                                        color: "#888888"
+                                        font.pixelSize: 14
+                                    }
+                                }
+                            }
+                        }
 
                         Label {
-                            text: modelData
-                            color: "#888888"
-                            font.pixelSize: 14
+                            anchors.centerIn: parent
+                            visible: player.lyrics.lineCount === 0
+                            color: "#999999"
+                            font.pixelSize: 16
+                            text: player.title ? "暂无歌词" : "请播放歌曲"
+                        }
+
+                        // 关闭按钮（右上角）
+                        Button {
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 4
+                            width: 20
+                            height: 20
+                            flat: true
+                            z: 2
+                            onClicked: player.showDesktopLyrics = false
+                            contentItem: Label {
+                                text: "\u2715"
+                                color: "#999999"
+                                font.pixelSize: 12
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? "#444444" : "transparent"
+                                radius: 10
+                            }
                         }
                     }
-                }
-            }
 
-            Label {
-                anchors.centerIn: parent
-                visible: player.lyrics.lineCount === 0
-                color: "#999999"
-                font.pixelSize: 16
-                text: player.title ? "暂无歌词" : "请播放歌曲"
-            }
+                    // 分割线
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 10
+                        Layout.rightMargin: 10
+                        Layout.preferredHeight: 1
+                        color: "#555555"
+                    }
 
-            Button {
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: 4
-                width: 20
-                height: 20
-                flat: true
-                z: 2
-                onClicked: player.showDesktopLyrics = false
-                contentItem: Label {
-                    text: "\u2715"
-                    color: "#999999"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle {
-                    color: parent.hovered ? "#444444" : "transparent"
-                    radius: 10
+                    // 控制栏：上一首 / 播放暂停 / 下一首（居中）
+                    Row {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 30
+                        layoutDirection: Qt.RightToLeft
+                        spacing: 0
+
+                        Item { width: (parent.width - 112) / 2; height: 1 }
+
+                        // 下一首
+                        Button {
+                            width: 36
+                            height: 30
+                            flat: true
+                            onClicked: window.playNext()
+                            contentItem: Label {
+                                text: "\u23ED"
+                                color: "#aaaaaa"
+                                font.pixelSize: 14
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? "#444444" : "transparent"
+                                radius: 4
+                            }
+                        }
+
+                        // 播放/暂停
+                        Button {
+                            width: 40
+                            height: 30
+                            flat: true
+                            onClicked: player.togglePlay()
+                            contentItem: Label {
+                                text: player.playing ? "\u23F8" : "\u25B6"
+                                color: "#1db954"
+                                font.pixelSize: 18
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? "#444444" : "transparent"
+                                radius: 4
+                            }
+                        }
+
+                        // 上一首
+                        Button {
+                            width: 36
+                            height: 30
+                            flat: true
+                            onClicked: window.playPrevious()
+                            contentItem: Label {
+                                text: "\u23EE"
+                                color: "#aaaaaa"
+                                font.pixelSize: 14
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? "#444444" : "transparent"
+                                radius: 4
+                            }
+                        }
+                    }
                 }
             }
         }
