@@ -442,6 +442,27 @@ Rectangle {
             }
 
             Button {
+                id: playlistToggleBtn
+                implicitWidth: 24
+                implicitHeight: 24
+                onClicked: playlistSidebar.isOpen = !playlistSidebar.isOpen
+                contentItem: Item {
+                    Image {
+                        anchors.centerIn: parent
+                        source: "qrc:/qt/qml/MusicPlayer/resources/icons/playlist.svg"
+                        sourceSize.width: 16
+                        sourceSize.height: 16
+                    }
+                }
+                background: Rectangle {
+                    color: playlistToggleBtn.hovered ? "#444444" : "transparent"
+                    radius: 4
+                }
+                ToolTip.text: qsTr("播放列表")
+                ToolTip.visible: playlistToggleBtn.hovered
+            }
+
+            Button {
                 id: speedBtn
                 implicitWidth: 36
                 implicitHeight: 28

@@ -69,6 +69,7 @@ qt_add_qml_module(MusicPlayer
         resources/icons/repeat-one.svg
         resources/icons/volume.svg
         resources/icons/volume-mute.svg
+        resources/icons/playlist.svg
 )
 
 target_include_directories(MusicPlayer PRIVATE

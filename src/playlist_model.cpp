@@ -1,4 +1,5 @@
 #include "playlist_model.h"
+#include "audio_decoder.h"
 #include <QFileInfo>
 #include <utility>
 
@@ -13,6 +14,12 @@ void PlaylistModel::addFile(const QString &filePath)
     Song s;
     s.filePath = filePath;
     s.title = QFileInfo(filePath).completeBaseName();
+    // 获取音频时长
+    AudioDecoder decoder;
+    if (decoder.open(filePath)) {
+        s.duration = static_cast<int>(decoder.duration());
+        decoder.close();
+    }
     songs_.append(s);
     endInsertRows();
     emit countChanged();
@@ -107,6 +114,8 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
         return s.title;
     case ArtistRole:
         return s.artist;
+    case DurationRole:
+        return s.duration;
     default:
         return {};
     }
@@ -119,5 +128,6 @@ QHash<int, QByteArray> PlaylistModel::roleNames() const
         {FilePathRole, "filePath"},
         {TitleRole, "title"},
         {ArtistRole, "artist"},
+        {DurationRole, "duration"},
     };
 }
