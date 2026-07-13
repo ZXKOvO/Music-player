@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import QtQuick.Window
 import MusicPlayer
 
 ApplicationWindow {
@@ -42,7 +43,103 @@ ApplicationWindow {
     PlayerController {
         id: player
         onPlaybackFinished: autoPlayNext()
-        Component.onCompleted: registerCoverProvider() // 注册封面 ImageProvider 到 QML 引擎
+        Component.onCompleted: registerCoverProvider()
+        onShowDesktopLyricsChanged: {
+            if (showDesktopLyrics) {
+                desktopLyricsWindow.visible = true
+            } else {
+                desktopLyricsWindow.visible = false
+            }
+        }
+    }
+
+    Window {
+        id: desktopLyricsWindow
+        width: 500
+        height: 80
+        visible: false
+        title: qsTr("桌面歌词")
+        color: "transparent"
+        flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool
+        x: (Screen.width - width) / 2
+        y: Screen.height - height - 100
+
+        property int activeIndex: player.lyrics.lineAt(player.position)
+        property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#cc1a1a1a"
+            radius: 10
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 4
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 0
+
+                    Repeater {
+                        model: player.lyrics.textAt(desktopLyricsWindow.activeIndex) || ""
+
+                        Label {
+                            text: modelData
+                            color: index <= player.lyrics.charIndexAt(player.position, desktopLyricsWindow.activeIndex)
+                                   ? "#1db954" : "#cccccc"
+                            font.pixelSize: 20
+                            font.bold: index <= player.lyrics.charIndexAt(player.position, desktopLyricsWindow.activeIndex)
+                        }
+                    }
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 0
+                    visible: desktopLyricsWindow.nextIndex >= 0
+
+                    Repeater {
+                        model: player.lyrics.textAt(desktopLyricsWindow.nextIndex) || ""
+
+                        Label {
+                            text: modelData
+                            color: "#888888"
+                            font.pixelSize: 14
+                        }
+                    }
+                }
+            }
+
+            Label {
+                anchors.centerIn: parent
+                visible: player.lyrics.lineCount === 0
+                color: "#999999"
+                font.pixelSize: 16
+                text: player.title ? "暂无歌词" : "请播放歌曲"
+            }
+
+            Button {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 4
+                width: 20
+                height: 20
+                flat: true
+                z: 2
+                onClicked: player.showDesktopLyrics = false
+                contentItem: Label {
+                    text: "\u2715"
+                    color: "#999999"
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    color: parent.hovered ? "#444444" : "transparent"
+                    radius: 10
+                }
+            }
+        }
     }
 
     // 在线歌曲搜索器：处理搜索、下载、播放逻辑
@@ -280,7 +377,6 @@ ApplicationWindow {
         id: addToPlaylistPopup
         anchors.centerIn: parent
         width: 360
-        height: Math.min(400, addToPlaylistColumn.height + 24)
         modal: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         onOpened: window.isAnyPopupOpen = true

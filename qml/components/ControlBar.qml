@@ -36,8 +36,8 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: false
             Layout.preferredWidth: 220
+            Layout.alignment: Qt.AlignVCenter
             spacing: 8
-            anchors.verticalCenter: parent.verticalCenter
 
             Rectangle {
                 width: 44
@@ -373,8 +373,8 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: false
             Layout.preferredWidth: 200
+            Layout.alignment: Qt.AlignVCenter
             spacing: 6
-            anchors.verticalCenter: parent.verticalCenter
 
             RowLayout {
                 spacing: 4
@@ -460,6 +460,29 @@ Rectangle {
                 }
                 ToolTip.text: qsTr("播放列表")
                 ToolTip.visible: playlistToggleBtn.hovered
+            }
+
+            Button {
+                id: desktopLyricsBtn
+                implicitWidth: 24
+                implicitHeight: 24
+                onClicked: player.showDesktopLyrics = !player.showDesktopLyrics
+                contentItem: Item {
+                    Label {
+                        anchors.centerIn: parent
+                        text: "\u266B"
+                        color: player.showDesktopLyrics ? "#1db954" : "#ffffff"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                background: Rectangle {
+                    color: desktopLyricsBtn.hovered ? "#444444" : "transparent"
+                    radius: 4
+                }
+                ToolTip.text: player.showDesktopLyrics ? qsTr("关闭桌面歌词") : qsTr("开启桌面歌词")
+                ToolTip.visible: desktopLyricsBtn.hovered
             }
 
             Button {

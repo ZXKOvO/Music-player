@@ -30,6 +30,7 @@ class PlayerController : public QObject
     Q_PROPERTY(LyricsParser *lyrics READ lyrics CONSTANT)
     Q_PROPERTY(double playbackSpeed READ playbackSpeed WRITE setPlaybackSpeed NOTIFY playbackSpeedChanged)
     Q_PROPERTY(bool hasCover READ hasCover NOTIFY hasCoverChanged)
+    Q_PROPERTY(bool showDesktopLyrics READ showDesktopLyrics WRITE setShowDesktopLyrics NOTIFY showDesktopLyricsChanged)
 public:
     explicit PlayerController(QObject *parent = nullptr);
     ~PlayerController();
@@ -45,6 +46,9 @@ public:
 
     // 注册封面图片提供器到 QML 引擎（由 Main.qml 在 onCompleted 中调用）
     Q_INVOKABLE void registerCoverProvider();
+
+    bool showDesktopLyrics() const { return showDesktopLyrics_; }
+    Q_INVOKABLE void setShowDesktopLyrics(bool show);
 
     bool playing() const { return playing_; }
     double duration() const { return duration_; }
@@ -70,6 +74,7 @@ signals:
     void errorOccurred(const QString &msg);
     void playbackFinished();
     void playbackSpeedChanged();
+    void showDesktopLyricsChanged();
 
 private slots:
     void onUpdatePosition();
@@ -107,5 +112,6 @@ private:
     LyricsFetcher *lyricsFetcher_;
     qint64 startPts_ = 0;
     double playbackSpeed_ = 1.0;
+    bool showDesktopLyrics_ = false;
     QSettings settings_;
 };
