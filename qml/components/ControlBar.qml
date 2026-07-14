@@ -3,9 +3,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 
+// 底部控制栏：播放控制、进度条、音量、播放模式等
 Rectangle {
     id: root
-    color: "#1a1a1a"
+    color: "black"
 
     // 双击切换全屏
     TapHandler {
@@ -18,6 +19,7 @@ Rectangle {
         }
     }
 
+    // 时间格式化函数：秒数转为 "分:秒" 格式
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) return "0:00"
         var m = Math.floor(sec / 60)
@@ -25,6 +27,7 @@ Rectangle {
         return m + ":" + (s < 10 ? "0" : "") + s
     }
 
+    // 主布局：左侧歌曲信息 + 中间控制按钮 + 右侧功能按钮
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 12
@@ -43,7 +46,7 @@ Rectangle {
                 width: 44
                 height: 44
                 radius: 22
-                color: "#333333"
+                color: "dimgray"
                 clip: true
 
                 Image {
@@ -60,7 +63,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "\u266A"
                     font.pixelSize: 22
-                    color: "#666666"
+                    color: "dimgray"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     visible: !coverImage.visible
@@ -74,7 +77,7 @@ Rectangle {
 
                 Label {
                     text: player.title || ""
-                    color: "#ffffff"
+                    color: "white"
                     font.pixelSize: 14
                     font.bold: true
                     elide: Text.ElideRight
@@ -83,7 +86,7 @@ Rectangle {
 
                 Label {
                     text: player.artist || ""
-                    color: "#999999"
+                    color: "gray"
                     font.pixelSize: 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -105,13 +108,13 @@ Rectangle {
                 }
                 contentItem: Label {
                     text: "\u2606"
-                    color: "#ffffff"
+                    color: "white"
                     font.pixelSize: 20
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
                 background: Rectangle {
-                    color: favoriteBtn.hovered ? "#444444" : "transparent"
+                    color: favoriteBtn.hovered ? "dimgray" : "transparent"
                     radius: 4
                 }
             }
@@ -122,13 +125,14 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 0
 
+            // 进度条：显示播放进度，支持拖动
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 6
 
                 Label {
                     text: formatTime(player.position)
-                    color: "#cccccc"
+                    color: "lightgray"
                     font.pixelSize: 10
                     Layout.preferredWidth: 32
                     horizontalAlignment: Text.AlignRight
@@ -149,12 +153,12 @@ Rectangle {
                         width: progressSlider.availableWidth
                         height: implicitHeight
                         radius: 2
-                        color: "#555555"
+                        color: "gray"
 
                         Rectangle {
                             width: progressSlider.visualPosition * parent.width
                             height: parent.height
-                            color: "#1db954"
+                            color: "limegreen"
                             radius: 2
                         }
                     }
@@ -164,18 +168,19 @@ Rectangle {
                         implicitWidth: 10
                         implicitHeight: 10
                         radius: 5
-                        color: progressSlider.pressed ? "#1ed760" : "#ffffff"
+                        color: progressSlider.pressed ? "limegreen" : "white"
                     }
                 }
 
                 Label {
                     text: formatTime(player.duration)
-                    color: "#cccccc"
+                    color: "lightgray"
                     font.pixelSize: 10
                     Layout.preferredWidth: 32
                 }
             }
 
+            // 播放控制按钮：停止/刷新、上一首、播放/暂停、下一首
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 12
@@ -185,13 +190,13 @@ Rectangle {
                     onClicked: player.stop()
                     contentItem: Label {
                         text: qsTr("刷新")
-                        color: "#ffffff"
+                        color: "white"
                         font.pixelSize: 13
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "#333333"
+                        color: parent.hovered ? "dimgray" : "dimgray"
                         radius: 4
                     }
                 }
@@ -208,7 +213,7 @@ Rectangle {
                             onPaint: {
                                 var ctx = getContext("2d")
                                 ctx.reset()
-                                ctx.fillStyle = "#ffffff"
+                                ctx.fillStyle = "white"
                                 ctx.globalAlpha = 0.85
                                 ctx.fillRect(1, 2, 2, 12)
                                 ctx.beginPath()
@@ -221,7 +226,7 @@ Rectangle {
                         }
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
+                        color: parent.hovered ? "dimgray" : "transparent"
                         radius: 4
                     }
                 }
@@ -240,7 +245,7 @@ Rectangle {
                             onPaint: {
                                 var ctx = getContext("2d")
                                 ctx.reset()
-                                ctx.fillStyle = "#ffffff"
+                                ctx.fillStyle = "white"
                                 ctx.globalAlpha = 0.85
                                 if (playing) {
                                     var barW = 3, gap = 3
@@ -260,7 +265,7 @@ Rectangle {
                         }
                     }
                     background: Rectangle {
-                        color: player.playing ? "#e74c3c" : (parent.hovered ? "#444444" : "#333333")
+                        color: player.playing ? "red" : (parent.hovered ? "dimgray" : "dimgray")
                         radius: 17
                     }
                 }
@@ -277,7 +282,7 @@ Rectangle {
                             onPaint: {
                                 var ctx = getContext("2d")
                                 ctx.reset()
-                                ctx.fillStyle = "#ffffff"
+                                ctx.fillStyle = "white"
                                 ctx.globalAlpha = 0.85
                                 ctx.beginPath()
                                 ctx.moveTo(2, 2)
@@ -290,7 +295,7 @@ Rectangle {
                         }
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
+                        color: parent.hovered ? "dimgray" : "transparent"
                         radius: 4
                     }
                 }
@@ -317,7 +322,7 @@ Rectangle {
                         }
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
+                        color: parent.hovered ? "dimgray" : "transparent"
                         radius: 4
                     }
 
@@ -330,14 +335,14 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: modeToolTipLabel.implicitWidth + 16
                         height: 24
-                        color: "#cc333333"
+                        color: "#33333333"
                         radius: 4
 
                         Label {
                             id: modeToolTipLabel
                             anchors.centerIn: parent
                             text: modeToolTip.text
-                            color: "#ffffff"
+                            color: "white"
                             font.pixelSize: 11
                         }
                     }
@@ -362,20 +367,21 @@ Rectangle {
                         }
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
+                        color: parent.hovered ? "dimgray" : "transparent"
                         radius: 4
                     }
                 }
             }
         }
 
-        // 右侧：音量 + 倍速
+        // 右侧：音量控制 + 倍速调节
         RowLayout {
             Layout.fillWidth: false
             Layout.preferredWidth: 200
             Layout.alignment: Qt.AlignVCenter
             spacing: 6
 
+            // 音量控制
             RowLayout {
                 spacing: 4
 
@@ -393,7 +399,7 @@ Rectangle {
                         }
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#444444" : "transparent"
+                        color: parent.hovered ? "dimgray" : "transparent"
                         radius: 4
                     }
                 }
@@ -420,12 +426,12 @@ Rectangle {
                         width: volumeSlider.availableWidth
                         height: implicitHeight
                         radius: 2
-                        color: "#555555"
+                        color: "gray"
 
                         Rectangle {
                             width: volumeSlider.visualPosition * parent.width
                             height: parent.height
-                            color: "#1db954"
+                            color: "limegreen"
                             radius: 2
                         }
                     }
@@ -436,11 +442,12 @@ Rectangle {
                         implicitWidth: 10
                         implicitHeight: 10
                         radius: 5
-                        color: volumeSlider.pressed ? "#1ed760" : "#ffffff"
+                        color: volumeSlider.pressed ? "limegreen" : "white"
                     }
                 }
             }
 
+            // 播放列表按钮
             Button {
                 id: playlistToggleBtn
                 implicitWidth: 24
@@ -455,13 +462,14 @@ Rectangle {
                     }
                 }
                 background: Rectangle {
-                    color: playlistToggleBtn.hovered ? "#444444" : "transparent"
+                    color: playlistToggleBtn.hovered ? "dimgray" : "transparent"
                     radius: 4
                 }
                 ToolTip.text: qsTr("播放列表")
                 ToolTip.visible: playlistToggleBtn.hovered
             }
 
+            // 桌面歌词按钮
             Button {
                 id: desktopLyricsBtn
                 implicitWidth: 24
@@ -471,20 +479,21 @@ Rectangle {
                     Label {
                         anchors.centerIn: parent
                         text: "\u266B"
-                        color: player.showDesktopLyrics ? "#1db954" : "#ffffff"
+                        color: player.showDesktopLyrics ? "limegreen" : "white"
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                 }
                 background: Rectangle {
-                    color: desktopLyricsBtn.hovered ? "#444444" : "transparent"
+                    color: desktopLyricsBtn.hovered ? "dimgray" : "transparent"
                     radius: 4
                 }
                 ToolTip.text: player.showDesktopLyrics ? qsTr("关闭桌面歌词") : qsTr("开启桌面歌词")
                 ToolTip.visible: desktopLyricsBtn.hovered
             }
 
+            // 倍速调节按钮
             Button {
                 id: speedBtn
                 implicitWidth: 36
@@ -492,32 +501,33 @@ Rectangle {
                 onClicked: speedPopup.open()
                 contentItem: Label {
                     text: player.playbackSpeed.toFixed(1) + "x"
-                    color: "#b3b3b3"
+                    color: "gray"
                     font.pixelSize: 11
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
                 background: Rectangle {
-                    color: speedBtn.hovered ? "#444444" : "transparent"
+                    color: speedBtn.hovered ? "dimgray" : "transparent"
                     radius: 4
                 }
+                // 倍速调节弹窗
                 Popup {
                     id: speedPopup
                     y: -height - 8
                     x: (parent.width - width) / 2
                     padding: 12
                     background: Rectangle {
-                        color: "#2a2a2a"
+                        color: "black"
                         radius: 8
-                        border.color: "#444444"
+                        border.color: "dimgray"
                         border.width: 1
                     }
                     contentItem: ColumnLayout {
                         spacing: 8
                         Label {
                             text: player.playbackSpeed.toFixed(1) + "x"
-                            color: "#ffffff"
+                            color: "white"
                             font.pixelSize: 14
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
@@ -540,11 +550,11 @@ Rectangle {
                                 width: speedSlider.availableWidth
                                 height: implicitHeight
                                 radius: 2
-                                color: "#555555"
+                                color: "gray"
                                 Rectangle {
                                     width: speedSlider.visualPosition * parent.width
                                     height: parent.height
-                                    color: "#1db954"
+                                    color: "limegreen"
                                     radius: 2
                                 }
                             }
@@ -554,7 +564,7 @@ Rectangle {
                                 implicitWidth: 16
                                 implicitHeight: 16
                                 radius: 8
-                                color: speedSlider.pressed ? "#1ed760" : "#ffffff"
+                                color: speedSlider.pressed ? "limegreen" : "white"
                             }
                         }
                     }

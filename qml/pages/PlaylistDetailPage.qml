@@ -21,20 +21,20 @@ ColumnLayout {
             }
             contentItem: Label {
                 text: "\u2190"
-                color: "#1db954"
+                color: "limegreen"
                 font.pixelSize: 18
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
             background: Rectangle {
-                color: parent.hovered ? "#e8f5e9" : "transparent"
+                color: parent.hovered ? "honeydew" : "transparent"
                 radius: 4
             }
         }
         Label {
             text: playlistManager.currentPlaylistName
-            color: "#000000"
+            color: "black"
             font.pixelSize: 18
             font.bold: true
             elide: Text.ElideRight
@@ -48,7 +48,7 @@ ColumnLayout {
         Layout.leftMargin: 12
         Layout.rightMargin: 12
         Layout.preferredHeight: 1
-        color: "#e0e0e0"
+        color: "lightgray"
     }
 
     // Song list
@@ -64,7 +64,7 @@ ColumnLayout {
         delegate: Rectangle {
             width: detailSongsView.width
             height: 40
-            color: ListView.isCurrentItem ? "#e8e8e8" : (dtHover.hovered ? "#f0f0f0" : "transparent")
+            color: ListView.isCurrentItem ? "lightgray" : (dtHover.hovered ? "whitesmoke" : "transparent")
 
             property int songIndex: index
             property string songPath: playlistManager.songFilePath(playlistManager.currentPlaylistIndex, index)
@@ -98,7 +98,7 @@ ColumnLayout {
 
                 Label {
                     text: (index + 1)
-                    color: "#666666"
+                    color: "dimgray"
                     font.pixelSize: 14
                     Layout.preferredWidth: 28
                     horizontalAlignment: Text.AlignRight
@@ -106,7 +106,7 @@ ColumnLayout {
 
                 Label {
                     text: songName
-                    color: "#000000"
+                    color: "black"
                     font.pixelSize: 14
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -120,13 +120,13 @@ ColumnLayout {
                     onClicked: removeSongConfirmDialog.openWithIndex(songIndex)
                     contentItem: Label {
                         text: "\u2715"
-                        color: "#cc0000"
+                        color: "red"
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#ffe0e0" : "transparent"
+                        color: parent.hovered ? "mistyrose" : "transparent"
                         radius: 4
                     }
                 }
@@ -137,7 +137,7 @@ ColumnLayout {
             anchors.centerIn: parent
             visible: window.detailSongCount === 0
             text: qsTr("暂无歌曲")
-            color: "#999999"
+            color: "gray"
             font.pixelSize: 14
         }
 
@@ -161,13 +161,13 @@ ColumnLayout {
             onClicked: addToPlaylistPopup.open()
             contentItem: Label {
                 text: qsTr("+ 从列表添加")
-                color: "#1db954"
+                color: "limegreen"
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
             background: Rectangle {
-                color: parent.hovered ? "#e8f5e9" : "transparent"
+                color: parent.hovered ? "honeydew" : "transparent"
                 radius: 4
             }
         }
@@ -180,13 +180,13 @@ ColumnLayout {
             onClicked: importFileDialog.open()
             contentItem: Label {
                 text: qsTr("+ 从文件导入")
-                color: "#1db954"
+                color: "limegreen"
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
             background: Rectangle {
-                color: parent.hovered ? "#e8f5e9" : "transparent"
+                color: parent.hovered ? "honeydew" : "transparent"
                 radius: 4
             }
         }
@@ -220,7 +220,7 @@ ColumnLayout {
             spacing: 12
             Label {
                 text: qsTr("确定要从歌单中移除这首歌曲吗？")
-                color: "#000000"
+                color: "black"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true

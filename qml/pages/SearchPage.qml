@@ -11,7 +11,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 52
-        color: "#f5f5f5"
+        color: "whitesmoke"
 
         RowLayout {
             anchors.fill: parent
@@ -28,11 +28,11 @@ ColumnLayout {
                 Layout.fillHeight: true
                 placeholderText: qsTr("搜索歌曲、歌手...")
                 font.pixelSize: 14
-                color: "#000000"
+                color: "black"
                 background: Rectangle {
-                    color: "#ffffff"
+                    color: "white"
                     radius: 4
-                    border.color: searchField.activeFocus ? "#1db954" : "#e0e0e0"
+                    border.color: searchField.activeFocus ? "limegreen" : "lightgray"
                     border.width: 1
                 }
                 onAccepted: songSearcher.search(text)  // 按回车触发搜索
@@ -47,14 +47,14 @@ ColumnLayout {
                 onClicked: songSearcher.search(searchField.text)
                 contentItem: Label {
                     text: qsTr("搜索")
-                    color: parent.enabled ? "#ffffff" : "#cccccc"
+                    color: parent.enabled ? "white" : "lightgray"
                     font.pixelSize: 14
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
                 background: Rectangle {
-                    color: parent.enabled ? "#1db954" : "#cccccc"
+                    color: parent.enabled ? "limegreen" : "lightgray"
                     radius: 4
                 }
             }
@@ -65,7 +65,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 1
-        color: "#e0e0e0"
+        color: "lightgray"
     }
 
     // 搜索状态指示器：显示"搜索中..."或错误信息
@@ -78,7 +78,7 @@ ColumnLayout {
 
         Label {
             text: songSearcher.searching ? qsTr("搜索中...") : songSearcher.errorMessage
-            color: songSearcher.errorMessage.length > 0 ? "#cc0000" : "#888888"
+            color: songSearcher.errorMessage.length > 0 ? "red" : "gray"
             font.pixelSize: 13
             Layout.fillWidth: true
         }
@@ -104,7 +104,7 @@ ColumnLayout {
         delegate: Rectangle {
             width: resultView.width
             height: 56
-            color: resultHover.hovered ? "#f0f0f0" : "transparent"
+            color: resultHover.hovered ? "whitesmoke" : "transparent"
 
             property int songDuration: duration  // 歌曲时长（秒）
 
@@ -121,7 +121,7 @@ ColumnLayout {
                 // 序号
                 Label {
                     text: (index + 1)
-                    color: "#999999"
+                    color: "gray"
                     font.pixelSize: 13
                     Layout.preferredWidth: 28
                     horizontalAlignment: Text.AlignRight
@@ -135,7 +135,7 @@ ColumnLayout {
                     // 歌曲名
                     Label {
                         text: name || ""
-                        color: "#000000"
+                        color: "black"
                         font.pixelSize: 14
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -152,7 +152,7 @@ ColumnLayout {
                             parts.push(durMin + ":" + (durSec < 10 ? "0" : "") + durSec)
                             return parts.join(" \u00B7 ")
                         }
-                        color: "#888888"
+                        color: "gray"
                         font.pixelSize: 12
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -172,13 +172,13 @@ ColumnLayout {
                     }
                     contentItem: Label {
                         text: "\u25B6"  // 播放图标
-                        color: "#1db954"
+                        color: "limegreen"
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#e8f5e9" : "transparent"
+                        color: parent.hovered ? "honeydew" : "transparent"
                         radius: 4
                     }
                 }
@@ -196,14 +196,14 @@ ColumnLayout {
                     }
                     contentItem: Label {
                         text: "+"  // 添加图标
-                        color: "#1db954"
+                        color: "limegreen"
                         font.pixelSize: 18
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#e8f5e9" : "transparent"
+                        color: parent.hovered ? "honeydew" : "transparent"
                         radius: 4
                     }
                 }
@@ -215,7 +215,7 @@ ColumnLayout {
             anchors.centerIn: parent
             visible: songSearcher.model.count === 0 && !songSearcher.searching
             text: qsTr("搜索在线歌曲")
-            color: "#999999"
+            color: "gray"
             font.pixelSize: 15
         }
 

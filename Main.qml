@@ -5,13 +5,14 @@ import QtQuick.Dialogs
 import QtQuick.Window
 import MusicPlayer
 
+// 主窗口：应用入口，管理全局状态和页面切换
 ApplicationWindow {
     id: window
     width: 1000
     height: 500
     visible: true
     title: qsTr("Music Player")
-    color: "#2b2b2b"
+    color: "black"
 
     property int currentIndex: -1
     property string leftView: "search"
@@ -19,8 +20,10 @@ ApplicationWindow {
     property int playlistSongVersion: 0
     property bool isAnyPopupOpen: false
 
+    // 播放列表数据模型：管理歌曲列表和播放模式
     PlaylistModel { id: playlistModel }
 
+    // 歌单管理器：管理用户创建的歌单和歌曲收藏
     PlaylistManager {
         id: playlistManager
         onSongsChanged: {
@@ -40,6 +43,7 @@ ApplicationWindow {
         }
     }
 
+    // 播放控制器：管理音频播放、进度、音量等
     PlayerController {
         id: player
         onPlaybackFinished: autoPlayNext()
@@ -62,8 +66,10 @@ ApplicationWindow {
         return desktopLyricsObj
     }
 
+    // 桌面歌词窗口组件（动态创建）
     Component {
         id: desktopLyricsComponent
+        // 桌面歌词浮动窗口：透明背景，置顶显示，支持拖动
         Window {
             id: desktopLyricsWindow
             width: 500
@@ -107,7 +113,7 @@ ApplicationWindow {
                                     Label {
                                         text: modelData
                                         color: index <= player.lyrics.charIndexAt(player.position, activeIndex)
-                                               ? "#1db954" : "#cccccc"
+                                               ? "limegreen" : "lightgray"
                                         font.pixelSize: 20
                                         font.bold: index <= player.lyrics.charIndexAt(player.position, activeIndex)
                                     }
@@ -124,7 +130,7 @@ ApplicationWindow {
 
                                     Label {
                                         text: modelData
-                                        color: "#888888"
+                                        color: "gray"
                                         font.pixelSize: 14
                                     }
                                 }
@@ -134,7 +140,7 @@ ApplicationWindow {
                         Label {
                             anchors.centerIn: parent
                             visible: player.lyrics.lineCount === 0
-                            color: "#999999"
+                            color: "gray"
                             font.pixelSize: 16
                             text: player.title ? "暂无歌词" : "请播放歌曲"
                         }
@@ -151,13 +157,13 @@ ApplicationWindow {
                             onClicked: player.showDesktopLyrics = false
                             contentItem: Label {
                                 text: "\u2715"
-                                color: "#999999"
+                                color: "gray"
                                 font.pixelSize: 12
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
-                                color: parent.hovered ? "#444444" : "transparent"
+                                color: parent.hovered ? "dimgray" : "transparent"
                                 radius: 10
                             }
                         }
@@ -169,7 +175,7 @@ ApplicationWindow {
                         Layout.leftMargin: 10
                         Layout.rightMargin: 10
                         Layout.preferredHeight: 1
-                        color: "#555555"
+                        color: "gray"
                     }
 
                     // 控制栏：上一首 / 播放暂停 / 下一首（居中）
@@ -189,13 +195,13 @@ ApplicationWindow {
                             onClicked: window.playNext()
                             contentItem: Label {
                                 text: "\u23ED"
-                                color: "#aaaaaa"
+                                color: "gray"
                                 font.pixelSize: 14
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
-                                color: parent.hovered ? "#444444" : "transparent"
+                                color: parent.hovered ? "dimgray" : "transparent"
                                 radius: 4
                             }
                         }
@@ -208,13 +214,13 @@ ApplicationWindow {
                             onClicked: player.togglePlay()
                             contentItem: Label {
                                 text: player.playing ? "\u23F8" : "\u25B6"
-                                color: "#1db954"
+                                color: "limegreen"
                                 font.pixelSize: 18
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
-                                color: parent.hovered ? "#444444" : "transparent"
+                                color: parent.hovered ? "dimgray" : "transparent"
                                 radius: 4
                             }
                         }
@@ -227,13 +233,13 @@ ApplicationWindow {
                             onClicked: window.playPrevious()
                             contentItem: Label {
                                 text: "\u23EE"
-                                color: "#aaaaaa"
+                                color: "gray"
                                 font.pixelSize: 14
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
-                                color: parent.hovered ? "#444444" : "transparent"
+                                color: parent.hovered ? "dimgray" : "transparent"
                                 radius: 4
                             }
                         }
@@ -280,31 +286,32 @@ ApplicationWindow {
         }
     }
 
+    // 主布局：左侧面板 + 右侧歌词 + 底部控制栏
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        // Top area: left panel + lyrics side by side
+        // 顶部区域：左侧面板 + 歌词页面并排显示
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 0
 
-            // Left: Search + My playlists (no playlist tab)
+            // 左侧面板：搜索 + 我的歌单
             Rectangle {
                 Layout.fillHeight: true
                 Layout.preferredWidth: 350
-                color: "#ffffff"
+                color: "white"
 
                 ColumnLayout {
                     anchors.fill: parent
                     spacing: 0
 
-                    // Navigation tabs
+                    // 导航标签栏：搜索/我的歌单切换
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 44
-                        color: "#f5f5f5"
+                        color: "whitesmoke"
 
                         RowLayout {
                             anchors.fill: parent
@@ -324,7 +331,7 @@ ApplicationWindow {
                                 }
                                 contentItem: Label {
                                     text: qsTr("搜索")
-                                    color: window.leftView === "search" ? "#1db954" : "#666666"
+                                    color: window.leftView === "search" ? "limegreen" : "dimgray"
                                     font.pixelSize: 14
                                     font.bold: window.leftView === "search"
                                     horizontalAlignment: Text.AlignHCenter
@@ -336,7 +343,7 @@ ApplicationWindow {
                                         anchors.bottom: parent.bottom
                                         width: parent.width
                                         height: 2
-                                        color: "#1db954"
+                                        color: "limegreen"
                                         visible: window.leftView === "search"
                                     }
                                 }
@@ -354,7 +361,7 @@ ApplicationWindow {
                                 }
                                 contentItem: Label {
                                     text: qsTr("我的歌单")
-                                    color: window.leftView === "playlists" ? "#1db954" : "#666666"
+                                    color: window.leftView === "playlists" ? "limegreen" : "dimgray"
                                     font.pixelSize: 14
                                     font.bold: window.leftView === "playlists"
                                     horizontalAlignment: Text.AlignHCenter
@@ -366,7 +373,7 @@ ApplicationWindow {
                                         anchors.bottom: parent.bottom
                                         width: parent.width
                                         height: 2
-                                        color: "#1db954"
+                                        color: "limegreen"
                                         visible: window.leftView === "playlists"
                                     }
                                 }
@@ -377,10 +384,10 @@ ApplicationWindow {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
-                        color: "#e0e0e0"
+                        color: "lightgray"
                     }
 
-                    // Content area: StackView
+                    // 内容区域：栈视图管理页面切换
                     StackView {
                         id: leftStackView
                         Layout.fillWidth: true
@@ -390,20 +397,21 @@ ApplicationWindow {
                 }
             }
 
-            // Divider line
+            // 分隔线
             Rectangle {
                 Layout.preferredWidth: 1
                 Layout.fillHeight: true
-                color: "#cccccc"
+                color: "lightgray"
             }
 
-            // Right: Lyrics area
+            // 右侧区域：歌词页面
             LyricsPage {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
         }
 
+        // 底部控制栏：播放控制、进度条、音量等
         ControlBar {
             id: controlBar
             Layout.fillWidth: true
@@ -411,25 +419,29 @@ ApplicationWindow {
         }
     }
 
-    // ===== Page Components =====
+    // ===== 页面组件 =====
 
+    // 歌单列表页组件
     Component {
         id: playlistsViewComp
         PlaylistsPage {}
     }
 
+    // 搜索页组件
     Component {
         id: searchViewComp
         SearchPage {}
     }
 
+    // 歌单详情页组件
     Component {
         id: playlistDetailComp
         PlaylistDetailPage {}
     }
 
-    // ===== Dialogs & Popups =====
+    // ===== 对话框和弹窗 =====
 
+    // 文件选择对话框：选择本地音频文件
     FileDialog {
         id: fileDialog
         title: qsTr("Select Audio File")
@@ -450,6 +462,7 @@ ApplicationWindow {
         }
     }
 
+    // 新建歌单对话框
     Dialog {
         id: createPlaylistDialog
         title: qsTr("新建歌单")
@@ -469,7 +482,7 @@ ApplicationWindow {
             spacing: 12
             Label {
                 text: qsTr("请输入歌单名称：")
-                color: "#000000"
+                color: "black"
                 font.pixelSize: 14
             }
             TextField {
@@ -482,7 +495,7 @@ ApplicationWindow {
         }
     }
 
-    // Add to playlist popup
+    // 添加到歌单弹窗：选择歌曲添加到指定歌单
     Popup {
         id: addToPlaylistPopup
         anchors.centerIn: parent
@@ -493,9 +506,9 @@ ApplicationWindow {
         onClosed: window.isAnyPopupOpen = false
 
         background: Rectangle {
-            color: "#ffffff"
+            color: "white"
             radius: 8
-            border.color: "#e0e0e0"
+            border.color: "lightgray"
             border.width: 1
         }
 
@@ -511,7 +524,7 @@ ApplicationWindow {
                 Layout.bottomMargin: 8
                 Label {
                     text: qsTr("添加歌曲到：") + playlistManager.currentPlaylistName
-                    color: "#000000"
+                    color: "black"
                     font.pixelSize: 15
                     font.bold: true
                     Layout.fillWidth: true
@@ -523,7 +536,7 @@ ApplicationWindow {
                     onClicked: addToPlaylistPopup.close()
                     contentItem: Label {
                         text: "\u2715"
-                        color: "#666666"
+                        color: "dimgray"
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -534,7 +547,7 @@ ApplicationWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: "#e0e0e0"
+                color: "lightgray"
             }
 
             ListView {
@@ -548,7 +561,7 @@ ApplicationWindow {
                 delegate: Rectangle {
                     width: addSongListView.width
                     height: 40
-                    color: addSongHover.hovered ? "#f0f0f0" : "transparent"
+                    color: addSongHover.hovered ? "whitesmoke" : "transparent"
 
                     property bool alreadyAdded: {
                         var _v = window.playlistSongVersion
@@ -581,7 +594,7 @@ ApplicationWindow {
 
                         Label {
                             text: title || ""
-                            color: alreadyAdded ? "#cccccc" : "#000000"
+                            color: alreadyAdded ? "lightgray" : "black"
                             font.pixelSize: 14
                             elide: Text.ElideRight
                             Layout.fillWidth: true
@@ -589,7 +602,7 @@ ApplicationWindow {
 
                         Label {
                             text: alreadyAdded ? qsTr("已添加") : qsTr("添加")
-                            color: alreadyAdded ? "#cccccc" : "#1db954"
+                            color: alreadyAdded ? "lightgray" : "limegreen"
                             font.pixelSize: 12
                         }
                     }
@@ -599,14 +612,14 @@ ApplicationWindow {
                     anchors.centerIn: parent
                     visible: playlistModel.count === 0
                     text: qsTr("播放列表为空，请先添加歌曲")
-                    color: "#999999"
+                    color: "gray"
                     font.pixelSize: 13
                 }
             }
         }
     }
 
-    // Favorite to playlist popup
+    // 收藏到歌单弹窗：将当前歌曲收藏到歌单
     Popup {
         id: favoritePopup
         anchors.centerIn: parent
@@ -619,9 +632,9 @@ ApplicationWindow {
         padding: 12
 
         background: Rectangle {
-            color: "#ffffff"
+            color: "white"
             radius: 8
-            border.color: "#e0e0e0"
+            border.color: "lightgray"
             border.width: 1
         }
 
@@ -634,7 +647,7 @@ ApplicationWindow {
                 spacing: 8
                 Label {
                     text: qsTr("收藏到歌单")
-                    color: "#000000"
+                    color: "black"
                     font.pixelSize: 15
                     font.bold: true
                     Layout.fillWidth: true
@@ -646,7 +659,7 @@ ApplicationWindow {
                     onClicked: favoritePopup.close()
                     contentItem: Label {
                         text: "\u2715"
-                        color: "#666666"
+                        color: "dimgray"
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -657,14 +670,14 @@ ApplicationWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: "#e0e0e0"
+                color: "lightgray"
             }
 
             Label {
                 Layout.fillWidth: true
                 Layout.topMargin: 4
                 text: player.title || ""
-                color: "#888888"
+                color: "gray"
                 font.pixelSize: 12
                 elide: Text.ElideRight
             }
@@ -679,7 +692,7 @@ ApplicationWindow {
                 delegate: Rectangle {
                     width: ListView.view.width
                     height: 44
-                    color: favHover.hovered ? "#f0f0f0" : "transparent"
+                    color: favHover.hovered ? "whitesmoke" : "transparent"
 
                     property bool alreadyIn: {
                         var _v = window.playlistSongVersion
@@ -714,18 +727,18 @@ ApplicationWindow {
                             width: 32
                             height: 32
                             radius: 4
-                            color: "#1db954"
+                            color: "limegreen"
                             Label {
                                 anchors.centerIn: parent
                                 text: "\u266B"
-                                color: "#ffffff"
+                                color: "white"
                                 font.pixelSize: 16
                             }
                         }
 
                         Label {
                             text: name
-                            color: "#000000"
+                            color: "black"
                             font.pixelSize: 14
                             Layout.fillWidth: true
                             elide: Text.ElideRight
@@ -733,7 +746,7 @@ ApplicationWindow {
 
                         Label {
                             text: alreadyIn ? qsTr("已收藏") : ""
-                            color: "#cccccc"
+                            color: "lightgray"
                             font.pixelSize: 12
                         }
                     }
@@ -742,7 +755,7 @@ ApplicationWindow {
         }
     }
 
-    // Import file dialog
+    // 导入歌曲对话框：批量导入歌曲到歌单
     FileDialog {
         id: importFileDialog
         title: qsTr("导入歌曲到歌单")
@@ -767,255 +780,25 @@ ApplicationWindow {
         }
     }
 
-    // Playlist sidebar (slides out from right)
-    Rectangle {
+    // 播放列表侧边栏：从右侧滑出，显示当前播放队列
+    PlaylistSidebar {
         id: playlistSidebar
-        property bool isOpen: false
-        width: 260
-        height: Math.min(parent.height - controlBar.height - 56, 420)
-        y: parent.height - controlBar.height - height - 12
-        color: "#ffffff"
-        z: 100
-        clip: true
-        x: isOpen ? parent.width - width : parent.width
-
-        Behavior on x {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-        }
-
-        // 半透明遮罩
-        Rectangle {
-            x: -playlistSidebar.x
-            width: parent.width
-            height: parent.height
-            color: "#40000000"
-            visible: playlistSidebar.isOpen
-            TapHandler { onTapped: playlistSidebar.isOpen = false }
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.topMargin: 1
-            spacing: 0
-
-            // Header
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 40
-                color: "#fafafa"
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 8
-                    spacing: 6
-
-                    Label {
-                        text: qsTr("播放列表")
-                        color: "#000000"
-                        font.pixelSize: 13
-                        font.bold: true
-                    }
-                    Rectangle {
-                        Layout.preferredWidth: 24
-                        Layout.preferredHeight: 16
-                        radius: 8
-                        color: "#f0f0f0"
-                        Label {
-                            anchors.centerIn: parent
-                            text: playlistModel.count
-                            color: "#666666"
-                            font.pixelSize: 10
-                        }
-                    }
-                    Item { Layout.fillWidth: true }
-                    Button {
-                        flat: true
-                        implicitWidth: 28
-                        implicitHeight: 28
-                        onClicked: playlistSidebar.isOpen = false
-                        contentItem: Label {
-                            text: "\u2715"
-                            color: "#999999"
-                            font.pixelSize: 14
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle {
-                            color: parent.hovered ? "#e8e8e8" : "transparent"
-                            radius: 4
-                        }
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#e8e8e8"
-            }
-
-            // Song list
-            ListView {
-                id: playlistSidebarListView
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                model: playlistModel
-                currentIndex: window.currentIndex
-                spacing: 0
-
-                delegate: Rectangle {
-                    width: playlistSidebarListView.width
-                    height: 36
-                    color: ListView.isCurrentItem ? "#f0f7f0" : (sidebarHover.hovered ? "#f5f5f5" : "transparent")
-
-                    TapHandler {
-                        onDoubleTapped: {
-                            window.currentIndex = index
-                            player.playFile(filePath)
-                        }
-                    }
-
-                    HoverHandler {
-                        id: sidebarHover
-                    }
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 8
-                        spacing: 10
-
-                        Label {
-                            text: (index + 1)
-                            color: ListView.isCurrentItem ? "#1db954" : "#999999"
-                            font.pixelSize: 12
-                            Layout.preferredWidth: 24
-                            horizontalAlignment: Text.AlignRight
-                        }
-
-                        Label {
-                            text: {
-                                var artistText = artist || ""
-                                var titleText = title || ""
-                                if (artistText && titleText)
-                                    return artistText + " - " + titleText
-                                return titleText
-                            }
-                            color: ListView.isCurrentItem ? "#1db954" : "#333333"
-                            font.pixelSize: 12
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
-                            text: {
-                                var d = duration || 0
-                                var m = Math.floor(d / 60)
-                                var s = Math.floor(d % 60)
-                                return m + ":" + (s < 10 ? "0" : "") + s
-                            }
-                            color: "#999999"
-                            font.pixelSize: 11
-                        }
-
-                        Button {
-                            flat: true
-                            implicitWidth: 24
-                            implicitHeight: 24
-                            visible: sidebarHover.hovered
-                            onClicked: {
-                                playlistModel.remove(index)
-                                if (index === window.currentIndex) {
-                                    player.stop()
-                                    window.currentIndex = -1
-                                } else if (index < window.currentIndex) {
-                                    window.currentIndex--
-                                }
-                            }
-                            contentItem: Label {
-                                text: "\u2715"
-                                color: "#cc0000"
-                                font.pixelSize: 11
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            background: Rectangle {
-                                color: parent.hovered ? "#ffe0e0" : "transparent"
-                                radius: 4
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        width: parent.width
-                        height: 1
-                        color: "#f0f0f0"
-                        visible: index < playlistModel.count - 1
-                    }
-                }
-
-                ScrollBar.vertical: ScrollBar {
-                    policy: ScrollBar.AsNeeded
-                }
-
-                Label {
-                    anchors.centerIn: parent
-                    visible: playlistModel.count === 0
-                    text: qsTr("播放列表为空，请先添加歌曲")
-                    color: "#999999"
-                    font.pixelSize: 13
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: "#e8e8e8"
-                visible: playlistModel.count > 0
-            }
-
-            Button {
-                text: qsTr("清空播放列表")
-                Layout.fillWidth: true
-                Layout.preferredHeight: 34
-                visible: playlistModel.count > 0
-                flat: true
-                contentItem: Label {
-                    text: qsTr("清空播放列表")
-                    color: "#999999"
-                    font.pixelSize: 12
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle {
-                    color: parent.hovered ? "#f5f5f5" : "transparent"
-                }
-                onClicked: {
-                    playlistModel.clear()
-                    window.currentIndex = -1
-                    player.stop()
-                }
-            }
-        }
+        controlBarHeight: controlBar.height
     }
 
-    // ===== Playback Functions =====
+    // ===== 播放功能 =====
 
+    // 下一首：根据播放模式切换到下一首歌曲
     function playNext() {
         if (playlistModel.count === 0) return
         var next
         switch (playlistModel.playMode) {
-        case 0:
+        case 0: // 列表循环
+        case 1: // 单曲循环（手动切歌时按顺序）
             next = window.currentIndex + 1
             if (next >= playlistModel.count) next = 0
             break
-        case 1:
-            next = window.currentIndex
-            break
-        case 2:
+        case 2: // 随机播放
             next = Math.floor(Math.random() * playlistModel.count)
             if (playlistModel.count > 1) {
                 while (next === window.currentIndex) {
@@ -1031,18 +814,17 @@ ApplicationWindow {
         player.playFile(playlistModel.filePath(next))
     }
 
+    // 上一首：根据播放模式切换到上一首歌曲
     function playPrevious() {
         if (playlistModel.count === 0) return
         var prev
         switch (playlistModel.playMode) {
-        case 0:
+        case 0: // 列表循环
+        case 1: // 单曲循环（手动切歌时按顺序）
             prev = window.currentIndex - 1
             if (prev < 0) prev = playlistModel.count - 1
             break
-        case 1:
-            prev = window.currentIndex
-            break
-        case 2:
+        case 2: // 随机播放
             prev = Math.floor(Math.random() * playlistModel.count)
             if (playlistModel.count > 1) {
                 while (prev === window.currentIndex) {
@@ -1058,18 +840,19 @@ ApplicationWindow {
         player.playFile(playlistModel.filePath(prev))
     }
 
+    // 自动播放下一首：歌曲播放完毕后自动调用
     function autoPlayNext() {
         if (playlistModel.count === 0) return
         var next
         switch (playlistModel.playMode) {
-        case 0:
+        case 0: // 列表循环
             next = window.currentIndex + 1
             if (next >= playlistModel.count) next = 0
             break
-        case 1:
+        case 1: // 单曲循环
             next = window.currentIndex
             break
-        case 2:
+        case 2: // 随机播放
             next = Math.floor(Math.random() * playlistModel.count)
             if (playlistModel.count > 1) {
                 while (next === window.currentIndex) {
@@ -1104,14 +887,14 @@ ApplicationWindow {
         closePolicy: Popup.NoAutoClose
 
         background: Rectangle {
-            color: "#cc333333"
+            color: "#33333333"
             radius: 18
         }
 
         contentItem: Label {
             id: toastLabel
             text: toastMessage
-            color: "#ffffff"
+            color: "white"
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

@@ -56,12 +56,12 @@ qt_add_qml_module(MusicPlayer
         src/search_result_model.cpp
     QML_FILES
         Main.qml
-        qml/pages/PlaylistPage.qml
         qml/pages/PlaylistsPage.qml
         qml/pages/PlaylistDetailPage.qml
         qml/pages/LyricsPage.qml
         qml/pages/SearchPage.qml
         qml/components/ControlBar.qml
+        qml/components/PlaylistSidebar.qml
     RESOURCES
         resources/icons/add.svg
         resources/icons/shuffle.svg

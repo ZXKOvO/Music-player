@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // 歌词面板：逐字高亮显示，点击某行可跳转，封面作为背景
 Rectangle {
     id: root
-    color: "#ffffff"
+    color: "white"
 
     // 封面背景图片（通过 ImageProvider 从内存加载，无临时文件）
     Image {
@@ -22,7 +22,7 @@ Rectangle {
     // 半透明遮罩，确保歌词可读
     Rectangle {
         anchors.fill: parent
-        color: coverBg.visible ? "#99000000" : "#ffffff"
+        color: coverBg.visible ? "#99000000" : "white"
     }
 
     ColumnLayout {
@@ -58,7 +58,7 @@ Rectangle {
 
                         Label {
                             text: modelData
-                            color: (isActive && index <= activeChar) ? "#1db954" : (coverBg.visible ? "#cccccc" : "#666666")
+                            color: (isActive && index <= activeChar) ? "limegreen" : (coverBg.visible ? "lightgray" : "dimgray")
                             font.pixelSize: isActive ? 18 : 14
                             font.bold: isActive && index <= activeChar
                         }
@@ -83,7 +83,7 @@ Rectangle {
     Label {
         anchors.centerIn: parent
         visible: player.lyrics.lineCount === 0
-        color: coverBg.visible ? "#cccccc" : "#999999"
+        color: coverBg.visible ? "lightgray" : "gray"
         font.pixelSize: 20
         text: player.title ? "暂无歌词" : "请播放歌曲"
     }
