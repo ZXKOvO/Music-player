@@ -60,12 +60,13 @@ ColumnLayout {
                 onTapped: {
                     playlistManager.currentPlaylistIndex = index
                     var count = playlistManager.playlistSongCount(index)
+                    if (count === 0) return
+                    playlistModel.clear()
                     for (var i = 0; i < count; i++) {
-                        var path = playlistManager.songFilePath(index, i)
-                        if (!playlistModel.contains(path)) {
-                            playlistModel.addFile(path)
-                        }
+                        playlistModel.addFile(playlistManager.songFilePath(index, i))
                     }
+                    window.currentIndex = 0
+                    player.playFile(playlistModel.filePath(0))
                 }
             }
 
