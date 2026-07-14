@@ -43,6 +43,7 @@ public:
     Q_INVOKABLE void setPlaybackSpeed(double speed);
     Q_INVOKABLE void setVolume(float vol);
     Q_INVOKABLE void setMuted(bool muted);
+    Q_INVOKABLE void startWindowSystemMove(QObject *window);
 
     // 注册封面图片提供器到 QML 引擎（由 Main.qml 在 onCompleted 中调用）
     Q_INVOKABLE void registerCoverProvider();

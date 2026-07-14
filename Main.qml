@@ -65,6 +65,7 @@ ApplicationWindow {
     Component {
         id: desktopLyricsComponent
         Window {
+            id: desktopLyricsWindow
             width: 500
             height: 100
             visible: true
@@ -76,22 +77,6 @@ ApplicationWindow {
 
             property int activeIndex: player.lyrics.lineAt(player.position)
             property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
-            property point _dragPos: Qt.point(0, 0)
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onPressed: function(mouse) {
-                    _dragPos = Qt.point(mouse.x, mouse.y)
-                }
-                onPositionChanged: function(mouse) {
-                    if (pressed) {
-                        desktopLyricsWindow.x += mouse.x - _dragPos.x
-                        desktopLyricsWindow.y += mouse.y - _dragPos.y
-                    }
-                }
-                z: -1
-            }
 
             Rectangle {
                 anchors.fill: parent
@@ -252,6 +237,15 @@ ApplicationWindow {
                                 radius: 4
                             }
                         }
+                    }
+                }
+            }
+
+            TapHandler {
+                acceptedButtons: Qt.LeftButton
+                onPressedChanged: {
+                    if (pressed) {
+                        player.startWindowSystemMove(desktopLyricsWindow)
                     }
                 }
             }

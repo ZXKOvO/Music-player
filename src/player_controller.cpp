@@ -8,6 +8,7 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QDir>
+#include <QQuickWindow>
 
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
@@ -258,6 +259,12 @@ void PlayerController::setShowDesktopLyrics(bool show)
     showDesktopLyrics_ = show;
     settings_.setValue("showDesktopLyrics", show);
     emit showDesktopLyricsChanged();
+}
+
+void PlayerController::startWindowSystemMove(QObject *window)
+{
+    if (auto *qw = qobject_cast<QQuickWindow*>(window))
+        qw->startSystemMove();
 }
 
 void PlayerController::setPlaybackSpeed(double speed)
