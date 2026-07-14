@@ -335,7 +335,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: modeToolTipLabel.implicitWidth + 16
                         height: 24
-                        color: "#33333333"
+                        color: Qt.rgba(0.2, 0.2, 0.2, 0.2)
                         radius: 4
 
                         Label {

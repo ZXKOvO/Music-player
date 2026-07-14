@@ -83,10 +83,12 @@ ApplicationWindow {
 
             property int activeIndex: player.lyrics.lineAt(player.position)
             property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
+            property color lyricsColor: "limegreen"
+            property var colorList: ["green", "cyan", "yellow", "orange", "deeppink", "purple", "white"]
 
             Rectangle {
                 anchors.fill: parent
-                color: "#cc1a1a1a"
+                color: Qt.rgba(0.1, 0.1, 0.1, 0.8)
                 radius: 10
 
                 ColumnLayout {
@@ -113,7 +115,7 @@ ApplicationWindow {
                                     Label {
                                         text: modelData
                                         color: index <= player.lyrics.charIndexAt(player.position, activeIndex)
-                                               ? "limegreen" : "lightgray"
+                                               ? desktopLyricsWindow.lyricsColor : "lightgray"
                                         font.pixelSize: 20
                                         font.bold: index <= player.lyrics.charIndexAt(player.position, activeIndex)
                                     }
@@ -145,8 +147,30 @@ ApplicationWindow {
                             text: player.title ? "暂无歌词" : "请播放歌曲"
                         }
 
+                        // 颜色选择按钮
+                        Button {
+                            anchors.right: closeBtn.left
+                            anchors.top: parent.top
+                            anchors.margins: 4
+                            width: 20
+                            height: 20
+                            flat: true
+                            z: 2
+                            onClicked: colorPickerPopup.open()
+                            contentItem: Rectangle {
+                                width: 12; height: 12; radius: 6
+                                color: desktopLyricsWindow.lyricsColor
+                                border.color: "gray"; border.width: 1
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? "dimgray" : "transparent"
+                                radius: 10
+                            }
+                        }
+
                         // 关闭按钮（右上角）
                         Button {
+                            id: closeBtn
                             anchors.right: parent.right
                             anchors.top: parent.top
                             anchors.margins: 4
@@ -165,6 +189,48 @@ ApplicationWindow {
                             background: Rectangle {
                                 color: parent.hovered ? "dimgray" : "transparent"
                                 radius: 10
+                            }
+                        }
+
+                        // 颜色选择弹窗
+                        Popup {
+                            id: colorPickerPopup
+                            x: closeBtn.x - width
+                            y: closeBtn.y
+                            width: colorRow.width + 16
+                            height: 36
+                            padding: 8
+                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+                            background: Rectangle {
+                                color: Qt.rgba(0.13, 0.13, 0.13, 0.93)
+                                radius: 8
+                                border.                                color: "dimgray"
+                                border.width: 1
+                            }
+
+                            Row {
+                                id: colorRow
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 6
+
+                                Repeater {
+                                    model: desktopLyricsWindow.colorList
+                                    Rectangle {
+                                        width: 18; height: 18; radius: 9
+                                        color: modelData
+                                        border.color: desktopLyricsWindow.lyricsColor === modelData ? "white" : "dimgray"
+                                        border.width: desktopLyricsWindow.lyricsColor === modelData ? 2 : 1
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                desktopLyricsWindow.lyricsColor = modelData
+                                                colorPickerPopup.close()
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -887,7 +953,7 @@ ApplicationWindow {
         closePolicy: Popup.NoAutoClose
 
         background: Rectangle {
-            color: "#33333333"
+            color: Qt.rgba(0.2, 0.2, 0.2, 0.2)
             radius: 18
         }
 

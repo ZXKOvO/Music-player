@@ -22,7 +22,7 @@ Rectangle {
     // 半透明遮罩，确保歌词可读
     Rectangle {
         anchors.fill: parent
-        color: coverBg.visible ? "#99000000" : "white"
+        color: coverBg.visible ? Qt.rgba(0, 0, 0, 0.6) : "white"
     }
 
     ColumnLayout {

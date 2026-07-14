@@ -14,13 +14,13 @@ ColumnLayout {
         Layout.topMargin: 8
         Label {
             text: qsTr("播放列表")
-            color: "#000000"
+            color: "black"
             font.pixelSize: 18
             font.bold: true
         }
         Label {
             text: playlistModel.count
-            color: "#666666"
+            color: "dimgray"
             font.pixelSize: 16
         }
         Item { Layout.fillWidth: true }
@@ -39,7 +39,7 @@ ColumnLayout {
         delegate: Rectangle {
             width: playlistView.width
             height: 40
-            color: ListView.isCurrentItem ? "#e8e8e8" : (hoverHandler.hovered ? "#f0f0f0" : "transparent")
+            color: ListView.isCurrentItem ? "lightgray" : (hoverHandler.hovered ? "whitesmoke" : "transparent")
 
             TapHandler {
                 onDoubleTapped: {
@@ -60,7 +60,7 @@ ColumnLayout {
 
                 Label {
                     text: (index + 1)
-                    color: "#666666"
+                    color: "dimgray"
                     font.pixelSize: 14
                     Layout.preferredWidth: 28
                     horizontalAlignment: Text.AlignRight
@@ -74,7 +74,7 @@ ColumnLayout {
                             return artistText + " - " + titleText
                         return titleText
                     }
-                    color: "#000000"
+            color: "black"
                     font.pixelSize: 14
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -88,13 +88,13 @@ ColumnLayout {
                     onClicked: removeSongFromPlaylistDialog.openWithIndex(index)
                     contentItem: Label {
                         text: "\u2715"
-                        color: "#cc0000"
+                        color: "red"
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#ffe0e0" : "transparent"
+                        color: parent.hovered ? "mistyrose" : "transparent"
                         radius: 4
                     }
                 }
@@ -116,13 +116,13 @@ ColumnLayout {
         flat: true
         contentItem: Label {
             text: qsTr("清空播放列表")
-            color: "#888888"
+            color: "gray"
             font.pixelSize: 14
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
         background: Rectangle {
-            color: parent.hovered ? "#e8e8e8" : "transparent"
+            color: parent.hovered ? "lightgray" : "transparent"
             radius: 4
         }
         onClicked: clearPlaylistDialog.open()
@@ -163,7 +163,7 @@ ColumnLayout {
             spacing: 12
             Label {
                 text: qsTr("确定要从播放列表中移除这首歌曲吗？")
-                color: "#000000"
+                color: "black"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
@@ -190,7 +190,7 @@ ColumnLayout {
             spacing: 12
             Label {
                 text: qsTr("确定要清空播放列表吗？\n所有歌曲将被移除。")
-                color: "#000000"
+                color: "black"
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true

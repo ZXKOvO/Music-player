@@ -24,7 +24,7 @@ Rectangle {
         x: -root.x
         width: parent.width
         height: parent.height
-        color: "#40000000"
+        color: Qt.rgba(0, 0, 0, 0.25)
         visible: root.isOpen
         TapHandler { onTapped: root.isOpen = false }
     }
