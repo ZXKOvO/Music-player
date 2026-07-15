@@ -63,9 +63,9 @@ bool PlaylistManager::addSongToPlaylist(int playlistIndex, const QString &filePa
     if (containsSong(playlistIndex, filePath)) return false;
 
     QString permanentPath = filePath;
-    QString cacheDir = QString(PROJECT_SOURCE_DIR) + "/music cache";
+    QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/music cache";
     if (filePath.startsWith(cacheDir)) {
-        QString songsDir = QString(PROJECT_SOURCE_DIR) + "/playlist/songs";
+        QString songsDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/playlist/songs";
         QDir().mkpath(songsDir);
         QString fileName = QFileInfo(filePath).fileName();
         permanentPath = songsDir + "/" + fileName;
@@ -201,7 +201,7 @@ QHash<int, QByteArray> PlaylistManager::roleNames() const
 // 歌单持久化文件路径：项目目录下 playlist/playlists.json
 QString PlaylistManager::savePath() const
 {
-    return QString(PROJECT_SOURCE_DIR) + "/playlist/playlists.json";
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/playlist/playlists.json";
 }
 
 void PlaylistManager::saveToFile()

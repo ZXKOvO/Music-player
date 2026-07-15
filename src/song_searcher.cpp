@@ -206,8 +206,8 @@ void SongSearcher::getSongUrl(int songId, const QString &songName, const QString
             return;
         }
 
-        // 创建缓存目录：项目文件夹下的 music cache 目录
-        QString cacheDir = QString(PROJECT_SOURCE_DIR) + "/music cache";
+        // 创建缓存目录：应用数据目录下的 music cache
+        QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/music cache";
         QDir().mkpath(cacheDir);
 
         // 生成文件名：{songId}_{songName}.mp3，替换非法字符

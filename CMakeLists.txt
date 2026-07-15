@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # 生成 compile_commands.json，供 IDE 使用
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Network Qml)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network Qml Widgets)
 find_package(PkgConfig REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.9)
@@ -54,6 +54,8 @@ qt_add_qml_module(MusicPlayer
         src/song_searcher.cpp
         src/search_result_model.h
         src/search_result_model.cpp
+        src/file_dialog_helper.h
+        src/file_dialog_helper.cpp
     QML_FILES
         Main.qml
         qml/pages/PlaylistsPage.qml
@@ -80,7 +82,7 @@ target_include_directories(MusicPlayer PRIVATE
 )
 
 target_link_libraries(MusicPlayer
-    PRIVATE Qt6::Quick Qt6::Network Qt6::Qml
+    PRIVATE Qt6::Quick Qt6::Network Qt6::Qml Qt6::Widgets
     ${AV_LIBRARIES}
     ${SDL2_LIBRARIES}
 )
@@ -88,11 +90,6 @@ target_link_libraries(MusicPlayer
 target_compile_options(MusicPlayer PRIVATE
     ${AV_CFLAGS_OTHER}
     ${SDL2_CFLAGS_OTHER}
-)
-
-# 定义项目源代码根目录，用于在线歌曲缓存路径
-target_compile_definitions(MusicPlayer PRIVATE
-    PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 )
 
 set(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}" CACHE PATH "Install path prefix" FORCE)

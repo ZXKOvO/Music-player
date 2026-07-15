@@ -507,24 +507,22 @@ ApplicationWindow {
 
     // ===== 对话框和弹窗 =====
 
-    // 文件选择对话框：选择本地音频文件
-    FileDialog {
-        id: fileDialog
-        title: qsTr("Select Audio File")
-        fileMode: FileDialog.OpenFiles
-        nameFilters: ["Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape)", "All Files (*)"]
-        onAccepted: {
-            var paths = selectedFiles
-            for (var i = 0; i < paths.length; i++) {
-                var path = paths[i].toString()
-                if (!playlistModel.contains(path)) {
-                    playlistModel.addFile(path)
-                }
+    // 文件选择对话框：选择本地音频文件（内置对话框支持多选）
+    function openFileDialog() {
+        var helper = Qt.createQmlObject("import MusicPlayer; FileDialogHelper {}", window);
+        var filter = qsTr("Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape);;All Files (*)");
+        var paths = helper.openFiles(qsTr("Select Audio File"), filter);
+        helper.destroy();
+        if (paths.length === 0) return;
+        for (var i = 0; i < paths.length; i++) {
+            var path = paths[i].toString()
+            if (!playlistModel.contains(path)) {
+                playlistModel.addFile(path)
             }
-            if (window.currentIndex === -1 && playlistModel.count > 0) {
-                window.currentIndex = 0
-                player.playFile(playlistModel.filePath(0))
-            }
+        }
+        if (window.currentIndex === -1 && playlistModel.count > 0) {
+            window.currentIndex = 0
+            player.playFile(playlistModel.filePath(0))
         }
     }
 
@@ -821,28 +819,26 @@ ApplicationWindow {
         }
     }
 
-    // 导入歌曲对话框：批量导入歌曲到歌单
-    FileDialog {
-        id: importFileDialog
-        title: qsTr("导入歌曲到歌单")
-        fileMode: FileDialog.OpenFiles
-        nameFilters: ["Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape)", "All Files (*)"]
-        onAccepted: {
-            var paths = selectedFiles
-            var count = 0
-            for (var i = 0; i < paths.length; i++) {
-                var path = paths[i].toString()
-                if (playlistManager.addSongToCurrentPlaylist(path)) {
-                    count++
-                }
+    // 导入歌曲对话框：批量导入歌曲到歌单（内置对话框支持多选）
+    function openImportFileDialog() {
+        var helper = Qt.createQmlObject("import MusicPlayer; FileDialogHelper {}", window);
+        var filter = qsTr("Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape);;All Files (*)");
+        var paths = helper.openFiles(qsTr("导入歌曲到歌单"), filter);
+        helper.destroy();
+        if (paths.length === 0) return;
+        var count = 0
+        for (var i = 0; i < paths.length; i++) {
+            var path = paths[i].toString()
+            if (playlistManager.addSongToCurrentPlaylist(path)) {
+                count++
             }
-            if (count === 0 && paths.length > 0) {
-                window.showToast(qsTr("所选歌曲已全部在歌单中"))
-            } else if (count === paths.length) {
-                window.showToast(qsTr("已添加 %1 首歌曲").arg(count))
-            } else if (paths.length > count) {
-                window.showToast(qsTr("已添加 %1 首，%2 首重复跳过").arg(count).arg(paths.length - count))
-            }
+        }
+        if (count === 0 && paths.length > 0) {
+            window.showToast(qsTr("所选歌曲已全部在歌单中"))
+        } else if (count === paths.length) {
+            window.showToast(qsTr("已添加 %1 首歌曲").arg(count))
+        } else if (paths.length > count) {
+            window.showToast(qsTr("已添加 %1 首，%2 首重复跳过").arg(count).arg(paths.length - count))
         }
     }
 

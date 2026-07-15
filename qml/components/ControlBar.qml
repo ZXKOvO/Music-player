@@ -358,7 +358,7 @@ Rectangle {
                 Button {
                     implicitWidth: 24
                     implicitHeight: 24
-                    onClicked: fileDialog.open()
+                    onClicked: window.openFileDialog()
                     contentItem: Item {
                         Image {
                             anchors.centerIn: parent

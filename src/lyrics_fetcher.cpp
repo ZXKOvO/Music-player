@@ -5,7 +5,7 @@
 #include <QUrl>
 #include <QUrlQuery>
 #include <QNetworkRequest>
-#include <QCoreApplication>
+#include <QStandardPaths>
 #include <QFile>
 #include <QDir>
 #include <utility>
@@ -16,7 +16,7 @@
 // 歌词获取日志：写入应用目录下的 log 文件，便于调试
 static void log(const QString &msg)
 {
-    QString path = QCoreApplication::applicationDirPath() + "/musicplayer_lyrics.log";
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/musicplayer_lyrics.log";
     QFile f(path);
     if (f.open(QIODevice::Append | QIODevice::Text)) {
         f.write(QDateTime::currentDateTime().toString("hh:mm:ss.zzz").toUtf8());

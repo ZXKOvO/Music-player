@@ -179,7 +179,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 36
             flat: true
-            onClicked: importFileDialog.open()
+            onClicked: window.openImportFileDialog()
             contentItem: Label {
                 text: qsTr("+ 从文件导入")
                 color: "limegreen"

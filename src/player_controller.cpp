@@ -8,6 +8,7 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QDir>
+#include <QStandardPaths>
 #include <QQuickWindow>
 #include <vector>
 
@@ -59,7 +60,7 @@ PlayerController::~PlayerController()
     audioOutput_.close();
 
     // 清空在线歌曲缓存目录
-    QString cacheDir = QString(PROJECT_SOURCE_DIR) + "/music cache";
+    QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/music cache";
     QDir dir(cacheDir);
     if (dir.exists()) {
         dir.removeRecursively();
