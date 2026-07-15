@@ -7,9 +7,9 @@ Rectangle {
     id: root
     property bool isOpen: false
     property int controlBarHeight: 0
-    width: 260
-    height: Math.min(parent.height - controlBarHeight - 56, 420)
-    y: parent.height - controlBarHeight - height - 12
+    width: Math.max(200, Math.min(320, window.width * 0.28))
+    height: parent.height - controlBarHeight - 12
+    y: 6
     color: "white"
     z: 100
     clip: true

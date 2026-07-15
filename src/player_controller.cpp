@@ -9,6 +9,7 @@
 #include <QQmlContext>
 #include <QDir>
 #include <QQuickWindow>
+#include <vector>
 
 PlayerController::PlayerController(QObject *parent)
     : QObject(parent)
@@ -318,7 +319,7 @@ void PlayerController::startDecoding()
     decoding_.store(true);
     decodeThread_ = QThread::create([this]() {
         uint8_t buf[65536];
-        uint8_t stretchBuf[262144]; // 0.5x 时输出最多约 2 倍输入
+        std::vector<uint8_t> stretchBuf(262144); // 0.5x 时输出最多约 2 倍输入
 
         while (decoding_.load()) {
             int n = decoder_.readPCM(buf, sizeof(buf));
@@ -351,14 +352,14 @@ void PlayerController::startDecoding()
             int inSamples = n / static_cast<int>(sizeof(float));
             int outSamples = speedSwitch_.process(reinterpret_cast<const float *>(buf),
                                                   inSamples,
-                                                  reinterpret_cast<float *>(stretchBuf),
-                                                  sizeof(stretchBuf) / static_cast<int>(sizeof(float)));
+                                                  reinterpret_cast<float *>(stretchBuf.data()),
+                                                  static_cast<int>(stretchBuf.size() / sizeof(float)));
 
             if (outSamples > 0) {
                 size_t toWrite = static_cast<size_t>(outSamples) * sizeof(float);
                 size_t offset = 0;
                 while (offset < toWrite && decoding_.load()) {
-                    size_t w = ringBuf_.write(stretchBuf + offset, toWrite - offset);
+                    size_t w = ringBuf_.write(stretchBuf.data() + offset, toWrite - offset);
                     if (w == 0) break;
                     offset += w;
                 }

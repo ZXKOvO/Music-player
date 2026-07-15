@@ -206,7 +206,7 @@ ApplicationWindow {
                             background: Rectangle {
                                 color: Qt.rgba(0.13, 0.13, 0.13, 0.93)
                                 radius: 8
-                                border.                                color: "dimgray"
+                                border.color: "dimgray"
                                 border.width: 1
                             }
 
@@ -619,7 +619,7 @@ ApplicationWindow {
             ListView {
                 id: addSongListView
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(340, playlistModel.count * 40 + 8)
+                Layout.preferredHeight: Math.max(60, Math.min(340, playlistModel.count * 40 + 8))
                 clip: true
                 model: playlistModel
                 spacing: 0
@@ -953,7 +953,7 @@ ApplicationWindow {
         closePolicy: Popup.NoAutoClose
 
         background: Rectangle {
-            color: Qt.rgba(0.2, 0.2, 0.2, 0.2)
+            color: Qt.rgba(0.2, 0.2, 0.2, 0.85)
             radius: 18
         }
 
