@@ -15,18 +15,22 @@ PlayerController::PlayerController(QObject *parent)
     , lyrics_(new LyricsParser(this))
     , lyricsFetcher_(new LyricsFetcher(this))
 {
+    // 进度轮询定时器：每 200ms 更新一次播放位置
     posTimer_.setInterval(200);
     connect(&posTimer_, &QTimer::timeout, this, &PlayerController::onUpdatePosition);
 
+    // seek 防抖定时器：拖动进度条后延迟 150ms 再执行实际 seek
     seekTimer_.setSingleShot(true);
     seekTimer_.setInterval(150);
     connect(&seekTimer_, &QTimer::timeout, this, &PlayerController::doSeek);
 
+    // 在线歌词获取成功：解析 YRC/LRC 格式并替换本地歌词
     connect(lyricsFetcher_, &LyricsFetcher::lyricsReady, this, [this](const QString &lrc) {
         qDebug() << "Online lyrics received, size=" << lrc.size();
         lyrics_->loadFromString(lrc);
         qDebug() << "Online lyrics loaded, lines=" << lyrics_->lineCount();
     });
+    // 在线歌词未找到：保留本地 LRC 歌词
     connect(lyricsFetcher_, &LyricsFetcher::lyricsNotFound, this, [this]() {
         qDebug() << "LyricsFetcher: no lyrics found online, keeping local LRC";
     });
@@ -34,17 +38,16 @@ PlayerController::PlayerController(QObject *parent)
         qDebug() << "LyricsFetcher error:" << msg;
     });
 
+    // SDL 音频子系统全局初始化（只执行一次）
     static bool sdlInited = false;
     if (!sdlInited) {
         SDL_Init(SDL_INIT_AUDIO);
         sdlInited = true;
     }
 
-    // 恢复上次保存的音量
+    // 从 QSettings 恢复上次保存的音量和桌面歌词设置
     float savedVol = settings_.value("volume", 1.0f).toFloat();
     audioOutput_.setVolume(savedVol);
-
-    // 恢复桌面歌词设置
     showDesktopLyrics_ = settings_.value("showDesktopLyrics", false).toBool();
 }
 
@@ -261,10 +264,10 @@ void PlayerController::setShowDesktopLyrics(bool show)
     emit showDesktopLyricsChanged();
 }
 
+// 启动窗口系统拖动（用于桌面歌词窗口拖拽移动）
 void PlayerController::startWindowSystemMove(QObject *window)
 {
-    if (auto *qw = qobject_cast<QQuickWindow*>(window))
-        qw->startSystemMove();
+    if (auto *qw = qobject_cast<QQuickWindow *>(window)) qw->startSystemMove();
 }
 
 void PlayerController::setPlaybackSpeed(double speed)
@@ -282,6 +285,7 @@ void PlayerController::setPlaybackSpeed(double speed)
     qDebug() << "Playback speed set to:" << speed;
 }
 
+// 将封面图片提供器注册到 QML 引擎，QML 通过 "image://cover/current" 访问
 void PlayerController::registerCoverProvider()
 {
     if (auto *ctx = QQmlEngine::contextForObject(this)) { ctx->engine()->addImageProvider("cover", &coverProvider_); }
@@ -333,7 +337,7 @@ void PlayerController::startDecoding()
             }
 
             if (std::abs(targetSpeed - 1.0) < 0.005) {
-                // 1.0x：绕过拉伸直接写入
+                // 1.0x 正常速度：跳过变速处理，直接写入环形缓冲区
                 size_t offset = 0;
                 while (offset < static_cast<size_t>(n) && decoding_.load()) {
                     size_t w = ringBuf_.write(buf + offset, static_cast<size_t>(n) - offset);
@@ -343,7 +347,7 @@ void PlayerController::startDecoding()
                 continue;
             }
 
-            // 非 1.0x：经 atempo 拉伸后写入
+            // 非 1.0x 变速：经 FFmpeg atempo 滤镜拉伸后写入环形缓冲区
             int inSamples = n / static_cast<int>(sizeof(float));
             int outSamples = speedSwitch_.process(reinterpret_cast<const float *>(buf),
                                                   inSamples,

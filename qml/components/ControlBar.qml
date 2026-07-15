@@ -19,7 +19,7 @@ Rectangle {
         }
     }
 
-    // 时间格式化函数：秒数转为 "分:秒" 格式
+    // 将秒数格式化为 "m:ss" 格式（如 65 → "1:05"）
     function formatTime(sec) {
         if (!isFinite(sec) || sec < 0) return "0:00"
         var m = Math.floor(sec / 60)
@@ -138,12 +138,13 @@ Rectangle {
                     horizontalAlignment: Text.AlignRight
                 }
 
+                // 播放进度条：拖动时实时更新，松手后触发 seek
                 Slider {
                     id: progressSlider
                     Layout.fillWidth: true
                     from: 0
                     to: player.duration || 1
-                    value: pressed ? value : player.position
+                    value: pressed ? value : player.position  // 拖动中保持手柄位置
                     enabled: player.title !== ""
                     onMoved: player.seek(value)
                     background: Rectangle {
@@ -180,7 +181,7 @@ Rectangle {
                 }
             }
 
-            // 播放控制按钮：停止/刷新、上一首、播放/暂停、下一首
+            // 播放控制按钮行：停止 | 上一首 | 播放/暂停 | 下一首 | 播放模式 | 添加文件
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 12
@@ -374,14 +375,14 @@ Rectangle {
             }
         }
 
-        // 右侧：音量控制 + 倍速调节
-        RowLayout {
-            Layout.fillWidth: false
-            Layout.preferredWidth: 200
-            Layout.alignment: Qt.AlignVCenter
-            spacing: 6
+            // 右侧功能区：音量 | 播放列表 | 桌面歌词 | 倍速
+            RowLayout {
+                Layout.fillWidth: false
+                Layout.preferredWidth: 200
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 6
 
-            // 音量控制
+                // 音量控制：静音按钮 + 音量滑块
             RowLayout {
                 spacing: 4
 

@@ -4,7 +4,10 @@
 #include <algorithm>
 #include <QDebug>
 
-SpeedSwitch::SpeedSwitch() {}
+SpeedSwitch::SpeedSwitch()
+    : curSpeed_(1.0)
+    , ready_(false)
+{}
 
 SpeedSwitch::~SpeedSwitch()
 {
@@ -130,6 +133,7 @@ bool SpeedSwitch::buildFilter(double speed)
     return true;
 }
 
+// 设置目标倍速：若变化超过阈值则重建 atempo 滤镜图
 void SpeedSwitch::setSpeed(double speed)
 {
     speed = std::clamp(speed, 0.5, 2.0);

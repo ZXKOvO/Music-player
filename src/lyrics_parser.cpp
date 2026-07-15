@@ -187,6 +187,7 @@ bool LyricsParser::loadFromString(const QString &lrcContent)
     return !lines_.isEmpty();
 }
 
+// 清空所有歌词行数据
 void LyricsParser::clear()
 {
     if (lines_.isEmpty()) return;

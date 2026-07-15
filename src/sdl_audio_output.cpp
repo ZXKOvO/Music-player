@@ -73,6 +73,7 @@ void SDLAudioOutput::audioCallback(void *userdata, uint8_t *stream, int len)
     self->ringBuf_->read(stream, static_cast<size_t>(len));
 
     float vol = self->volume_.load();
+    // 音量缩放：将每个 float 采样乘以音量系数（0.0~1.0）
     if (vol < 1.0f) {
         auto *s = reinterpret_cast<float *>(stream);
         size_t count = static_cast<size_t>(len) / sizeof(float);

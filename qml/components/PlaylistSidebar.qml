@@ -15,6 +15,7 @@ Rectangle {
     clip: true
     x: isOpen ? parent.width - width : parent.width
 
+    // 滑入/滑出动画：200ms 缓出效果
     Behavior on x {
         NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
     }
@@ -107,6 +108,7 @@ Rectangle {
                 color: ListView.isCurrentItem ? "honeydew" : (sidebarHover.hovered ? "whitesmoke" : "transparent")
 
                 TapHandler {
+                    // 双击歌曲条目：设置为当前播放并开始播放
                     onDoubleTapped: {
                         window.currentIndex = index
                         player.playFile(filePath)

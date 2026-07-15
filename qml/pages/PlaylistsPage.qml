@@ -52,11 +52,13 @@ ColumnLayout {
             color: plHover.hovered ? "whitesmoke" : "transparent"
 
             TapHandler {
+                // 双击进入歌单详情页
                 onDoubleTapped: {
                     playlistManager.currentPlaylistIndex = index
                     window.leftView = "playlistDetail"
                     leftStackView.push(playlistDetailComp)
                 }
+                // 单击将歌单歌曲加载到播放列表并播放第一首
                 onTapped: {
                     playlistManager.currentPlaylistIndex = index
                     var count = playlistManager.playlistSongCount(index)

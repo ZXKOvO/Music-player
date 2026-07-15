@@ -3,6 +3,7 @@
 #include <algorithm>
 
 // 构造指定容量的环形缓冲区
+// 构造函数：预分配指定容量的字节缓冲区
 RingBuffer::RingBuffer(size_t capacity)
     : buf_(capacity)
     , capacity_(capacity)

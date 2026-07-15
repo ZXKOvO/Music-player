@@ -2,6 +2,7 @@
 
 SearchResultModel::SearchResultModel(QObject *parent)
     : QAbstractListModel(parent)
+    , results_({})
 {}
 
 // 设置搜索结果，重置模型并通知视图更新

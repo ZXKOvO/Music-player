@@ -21,7 +21,7 @@ ColumnLayout {
             anchors.bottomMargin: 8
             spacing: 8
 
-            // 搜索输入框
+            // 搜索输入框：支持回车触发搜索
             TextField {
                 id: searchField
                 Layout.fillWidth: true
@@ -165,6 +165,7 @@ ColumnLayout {
                     implicitWidth: 32
                     implicitHeight: 32
                     visible: resultHover.hovered
+                    // 播放按钮：下载歌曲后立即播放
                     onClicked: {
                         songSearcher.pendingPlay = true  // 标记为播放模式
                         window.showToast(qsTr("正在获取歌曲..."))
@@ -189,6 +190,7 @@ ColumnLayout {
                     implicitWidth: 32
                     implicitHeight: 32
                     visible: resultHover.hovered
+                    // 添加按钮：下载歌曲后添加到播放列表
                     onClicked: {
                         songSearcher.pendingPlay = false  // 标记为添加模式
                         window.showToast(qsTr("正在获取歌曲..."))

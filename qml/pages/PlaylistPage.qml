@@ -41,6 +41,7 @@ ColumnLayout {
             height: 40
             color: ListView.isCurrentItem ? "lightgray" : (hoverHandler.hovered ? "whitesmoke" : "transparent")
 
+            // 双击播放列表中的歌曲
             TapHandler {
                 onDoubleTapped: {
                     window.currentIndex = index

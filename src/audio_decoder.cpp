@@ -108,10 +108,10 @@ int AudioDecoder::readPCM(uint8_t *buffer, int bufferSize)
     AVFrame *frame = av_frame_alloc();
     int totalRead = 0;
 
-    // 每个采样占用的字节数 = 声道数 × float大小
+    // 每帧字节数 = 声道数 × sizeof(float)，用于计算重采样输出偏移
     int bytesPerSample = static_cast<int>(static_cast<size_t>(outputFormat_.channels) * sizeof(float));
 
-    // 循环读取 packet → 解码 → 重采样，直到填满 buffer 或文件结束
+    // 主循环：读 packet → 送解码器 → 取帧 → 重采样写入 buffer
     while (totalRead < bufferSize) {
         int ret = av_read_frame(fmtCtx_, pkt);
         if (ret < 0) {

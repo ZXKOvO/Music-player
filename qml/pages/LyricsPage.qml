@@ -65,6 +65,7 @@ Rectangle {
                     }
                 }
 
+                // 点击歌词行跳转到对应时间点
                 TapHandler {
                     enabled: !window.isAnyPopupOpen
                     cursorShape: Qt.PointingHandCursor
@@ -72,6 +73,7 @@ Rectangle {
                 }
             }
 
+            // 当前行变化时自动滚动到居中位置
             onActiveIndexChanged: {
                 if (activeIndex >= 0) {
                     positionViewAtIndex(activeIndex, ListView.Center)

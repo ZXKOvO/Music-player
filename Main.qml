@@ -14,16 +14,16 @@ ApplicationWindow {
     title: qsTr("Music Player")
     color: "black"
 
-    property int currentIndex: -1
-    property string leftView: "search"
-    property int detailSongCount: 0
-    property int playlistSongVersion: 0
-    property bool isAnyPopupOpen: false
+    property int currentIndex: -1           // 当前播放歌曲在播放列表中的索引
+    property string leftView: "search"      // 左侧面板当前显示的页面
+    property int detailSongCount: 0         // 当前歌单详情页的歌曲数量
+    property int playlistSongVersion: 0     // 歌单歌曲变化版本号，用于触发 UI 刷新
+    property bool isAnyPopupOpen: false     // 是否有弹窗打开，用于屏蔽歌词点击跳转
 
-    // 播放列表数据模型：管理歌曲列表和播放模式
+    // 播放列表数据模型：管理当前播放队列和播放模式
     PlaylistModel { id: playlistModel }
 
-    // 歌单管理器：管理用户创建的歌单和歌曲收藏
+    // 歌单管理器：管理用户创建的多个命名歌单，支持持久化
     PlaylistManager {
         id: playlistManager
         onSongsChanged: {
@@ -59,6 +59,7 @@ ApplicationWindow {
 
     property var desktopLyricsObj: null
 
+    // 懒加载创建桌面歌词窗口（首次使用时创建，后续复用）
     function ensureDesktopLyricsWindow() {
         if (!desktopLyricsObj) {
             desktopLyricsObj = desktopLyricsComponent.createObject(null)
@@ -221,10 +222,9 @@ ApplicationWindow {
                                         color: modelData
                                         border.color: desktopLyricsWindow.lyricsColor === modelData ? "white" : "dimgray"
                                         border.width: desktopLyricsWindow.lyricsColor === modelData ? 2 : 1
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
+                                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+                                        TapHandler {
+                                            onTapped: {
                                                 desktopLyricsWindow.lyricsColor = modelData
                                                 colorPickerPopup.close()
                                             }
@@ -854,7 +854,7 @@ ApplicationWindow {
 
     // ===== 播放功能 =====
 
-    // 下一首：根据播放模式切换到下一首歌曲
+    // 下一首：根据播放模式（循环/单曲/随机）切换到下一首
     function playNext() {
         if (playlistModel.count === 0) return
         var next
@@ -880,7 +880,7 @@ ApplicationWindow {
         player.playFile(playlistModel.filePath(next))
     }
 
-    // 上一首：根据播放模式切换到上一首歌曲
+    // 上一首：根据播放模式切换到上一首
     function playPrevious() {
         if (playlistModel.count === 0) return
         var prev
@@ -906,7 +906,7 @@ ApplicationWindow {
         player.playFile(playlistModel.filePath(prev))
     }
 
-    // 自动播放下一首：歌曲播放完毕后自动调用
+    // 自动播放下一首：播放结束信号触发，与 playNext 区别在于单曲循环时重复当前歌曲
     function autoPlayNext() {
         if (playlistModel.count === 0) return
         var next
@@ -967,6 +967,7 @@ ApplicationWindow {
         }
     }
 
+    // 显示 Toast 提示消息，2 秒后自动消失
     function showToast(msg) {
         toastMessage = msg
         toastVisible = true

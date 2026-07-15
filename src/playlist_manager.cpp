@@ -11,6 +11,7 @@
 PlaylistManager::PlaylistManager(QObject *parent)
     : QAbstractListModel(parent)
 {
+    // 启动时从 JSON 文件加载已保存的歌单数据
     loadFromFile();
 }
 
@@ -197,6 +198,7 @@ QHash<int, QByteArray> PlaylistManager::roleNames() const
     return {{NameRole, "name"}, {SongCountRole, "songCount"}};
 }
 
+// 歌单持久化文件路径：项目目录下 playlist/playlists.json
 QString PlaylistManager::savePath() const
 {
     return QString(PROJECT_SOURCE_DIR) + "/playlist/playlists.json";

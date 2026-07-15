@@ -70,11 +70,13 @@ ColumnLayout {
             property string songPath: playlistManager.songFilePath(playlistManager.currentPlaylistIndex, index)
             property string songName: playlistManager.songTitle(playlistManager.currentPlaylistIndex, index)
 
+            // 双击歌曲：添加到播放列表（如不存在）并播放
             TapHandler {
                 onDoubleTapped: {
                     if (!playlistModel.contains(songPath)) {
                         playlistModel.addFile(songPath)
                     }
+                    // 查找已添加歌曲的索引
                     window.currentIndex = playlistModel.count - 1
                     for (var i = 0; i < playlistModel.count; i++) {
                         if (playlistModel.filePath(i) === songPath) {

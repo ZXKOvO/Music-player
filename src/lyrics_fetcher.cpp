@@ -13,6 +13,7 @@
 #include <QtMath>
 #include <QDebug>
 
+// 歌词获取日志：写入应用目录下的 log 文件，便于调试
 static void log(const QString &msg)
 {
     QString path = QCoreApplication::applicationDirPath() + "/musicplayer_lyrics.log";
