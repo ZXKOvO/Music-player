@@ -19,6 +19,7 @@ ApplicationWindow {
     property int detailSongCount: 0         // 当前歌单详情页的歌曲数量
     property int playlistSongVersion: 0     // 歌单歌曲变化版本号，用于触发 UI 刷新
     property bool isAnyPopupOpen: false     // 是否有弹窗打开，用于屏蔽歌词点击跳转
+    property bool leftPanelVisible: true    // 左侧面板是否可见
 
     // 播放列表数据模型：管理当前播放队列和播放模式
     PlaylistModel { id: playlistModel }
@@ -363,10 +364,12 @@ ApplicationWindow {
             Layout.fillHeight: true
             spacing: 0
 
-            // 左侧面板：搜索 + 我的歌单
+            // 左侧面板：搜索 + 我的歌单（可折叠）
             Rectangle {
+                id: leftPanel
                 Layout.fillHeight: true
                 Layout.preferredWidth: 350
+                visible: window.leftPanelVisible
                 color: "white"
 
                 ColumnLayout {
@@ -463,11 +466,62 @@ ApplicationWindow {
                 }
             }
 
-            // 分隔线
+            // 分隔线 + 折叠按钮
             Rectangle {
-                Layout.preferredWidth: 1
                 Layout.fillHeight: true
+                Layout.preferredWidth: window.leftPanelVisible ? 18 : 22
                 color: "lightgray"
+
+                // 点击分隔线任意位置切换折叠
+                TapHandler {
+                    onTapped: window.leftPanelVisible = !window.leftPanelVisible
+                }
+
+                // 折叠按钮（面板展开时显示）
+                Button {
+                    id: collapseBtn
+                    anchors.centerIn: parent
+                    width: 16
+                    height: 60
+                    flat: true
+                    z: 10
+                    visible: window.leftPanelVisible
+                    onClicked: window.leftPanelVisible = false
+                    contentItem: Label {
+                        text: "\u25C0"
+                        color: collapseBtn.hovered ? "limegreen" : "dimgray"
+                        font.pixelSize: 12
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: collapseBtn.hovered ? Qt.rgba(0, 0, 0, 0.08) : "transparent"
+                        radius: 4
+                    }
+                }
+
+                // 展开按钮（面板收起时显示）
+                Button {
+                    id: expandBtn
+                    anchors.centerIn: parent
+                    width: 20
+                    height: 80
+                    flat: true
+                    z: 10
+                    visible: !window.leftPanelVisible
+                    onClicked: window.leftPanelVisible = true
+                    contentItem: Label {
+                        text: "\u25B6"
+                        color: expandBtn.hovered ? "limegreen" : "dimgray"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: expandBtn.hovered ? Qt.rgba(0, 0, 0, 0.08) : "transparent"
+                        radius: 4
+                    }
+                }
             }
 
             // 右侧区域：歌词页面
