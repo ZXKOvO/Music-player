@@ -896,6 +896,23 @@ ApplicationWindow {
         }
     }
 
+    // 播放列表悬停触发区域：鼠标移到右侧边缘时自动打开播放列表
+    Item {
+        anchors.right: parent.right
+        width: 10
+        height: parent.height - controlBar.height
+        z: 50
+
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered) {
+                    playlistSidebar.isOpen = true
+                    playlistSidebar.closeTimer.stop()
+                }
+            }
+        }
+    }
+
     // 播放列表侧边栏：从右侧滑出，显示当前播放队列
     PlaylistSidebar {
         id: playlistSidebar

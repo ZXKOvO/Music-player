@@ -20,14 +20,32 @@ Rectangle {
         NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
     }
 
-    // 半透明遮罩
+    // 自动隐藏定时器：鼠标移出播放列表 300ms 后自动关闭
+    Timer {
+        id: closeTimer
+        interval: 300
+        onTriggered: root.isOpen = false
+    }
+
+    // 鼠标悬停处理：悬停在播放列表上时保持打开，移出时自动关闭
+    HoverHandler {
+        onHoveredChanged: {
+            if (hovered) {
+                closeTimer.stop()
+                root.isOpen = true
+            } else {
+                closeTimer.restart()
+            }
+        }
+    }
+
+    // 左侧分割线
     Rectangle {
-        x: -root.x
-        width: parent.width
-        height: parent.height
-        color: Qt.rgba(0, 0, 0, 0.25)
-        visible: root.isOpen
-        TapHandler { onTapped: root.isOpen = false }
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 20
+        color: "lightgray"
     }
 
     ColumnLayout {
