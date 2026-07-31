@@ -154,13 +154,9 @@ ColumnLayout {
     }
 
     // Delete playlist confirmation dialog
-    Dialog {
+    ConfirmDialog {
         id: deletePlaylistConfirmDialog
         title: qsTr("删除歌单")
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 320
 
         property int targetIndex: -1
         property string playlistName: ""

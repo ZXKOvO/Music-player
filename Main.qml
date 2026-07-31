@@ -581,13 +581,9 @@ ApplicationWindow {
     }
 
     // 新建歌单对话框
-    Dialog {
+    ConfirmDialog {
         id: createPlaylistDialog
         title: qsTr("新建歌单")
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 320
         onOpened: { playlistNameInput.text = ""; window.isAnyPopupOpen = true }
         onClosed: window.isAnyPopupOpen = false
         onAccepted: {

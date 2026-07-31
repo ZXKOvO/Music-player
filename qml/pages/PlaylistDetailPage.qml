@@ -195,13 +195,9 @@ ColumnLayout {
     }
 
     // Remove song confirmation dialog
-    Dialog {
+    ConfirmDialog {
         id: removeSongConfirmDialog
         title: qsTr("移除歌曲")
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 320
 
         property int targetIndex: -1
 

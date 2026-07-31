@@ -64,6 +64,7 @@ qt_add_qml_module(MusicPlayer
         qml/pages/SearchPage.qml
         qml/components/ControlBar.qml
         qml/components/PlaylistSidebar.qml
+        qml/components/ConfirmDialog.qml
     RESOURCES
         resources/icons/add.svg
         resources/icons/shuffle.svg

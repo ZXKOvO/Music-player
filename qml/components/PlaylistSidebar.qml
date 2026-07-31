@@ -6,6 +6,7 @@ import QtQuick.Layouts
 Rectangle {
     id: root
     property bool isOpen: false
+    property bool isDialogOpen: false
     property int controlBarHeight: 0
     width: Math.max(200, Math.min(320, window.width * 0.28))
     height: parent.height - controlBarHeight - 12
@@ -24,7 +25,11 @@ Rectangle {
     Timer {
         id: closeTimer
         interval: 300
-        onTriggered: root.isOpen = false
+        onTriggered: {
+            // 确认对话框打开时保持侧边栏可见
+            if (!root.isDialogOpen)
+                root.isOpen = false
+        }
     }
 
     // 鼠标悬停处理：悬停在播放列表上时保持打开，移出时自动关闭
@@ -33,7 +38,7 @@ Rectangle {
             if (hovered) {
                 closeTimer.stop()
                 root.isOpen = true
-            } else {
+            } else if (!root.isDialogOpen) {
                 closeTimer.restart()
             }
         }
@@ -181,15 +186,7 @@ Rectangle {
                         implicitWidth: 24
                         implicitHeight: 24
                         visible: sidebarHover.hovered
-                        onClicked: {
-                            playlistModel.remove(index)
-                            if (index === window.currentIndex) {
-                                player.stop()
-                                window.currentIndex = -1
-                            } else if (index < window.currentIndex) {
-                                window.currentIndex--
-                            }
-                        }
+                        onClicked: removeSongConfirmDialog.openWithIndex(index)
                         contentItem: Label {
                             text: "\u2715"
                             color: "red"
@@ -249,10 +246,86 @@ Rectangle {
             background: Rectangle {
                 color: parent.hovered ? "whitesmoke" : "transparent"
             }
-            onClicked: {
-                playlistModel.clear()
-                window.currentIndex = -1
-                player.stop()
+            onClicked: clearPlaylistDialog.open()
+        }
+    }
+
+    // 移除歌曲确认对话框
+    ConfirmDialog {
+        id: removeSongConfirmDialog
+        title: qsTr("移除歌曲")
+
+        property int targetIndex: -1
+
+        onOpened: {
+            root.isDialogOpen = true
+            root.isOpen = true
+        }
+        onClosed: {
+            root.isDialogOpen = false
+            closeTimer.restart()
+        }
+
+        function openWithIndex(idx) {
+            targetIndex = idx
+            open()
+        }
+
+        onAccepted: {
+            if (targetIndex >= 0) {
+                var removedIndex = targetIndex
+                playlistModel.remove(removedIndex)
+                if (removedIndex === window.currentIndex) {
+                    player.stop()
+                    window.currentIndex = -1
+                } else if (removedIndex < window.currentIndex) {
+                    window.currentIndex--
+                }
+                targetIndex = -1
+            }
+        }
+        onRejected: targetIndex = -1
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("确定要从播放列表中移除这首歌曲吗？")
+                color: "black"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+    }
+
+    // 清空播放列表确认对话框
+    ConfirmDialog {
+        id: clearPlaylistDialog
+        title: qsTr("清空播放列表")
+
+        onOpened: {
+            root.isDialogOpen = true
+            root.isOpen = true
+        }
+        onClosed: {
+            root.isDialogOpen = false
+            closeTimer.restart()
+        }
+
+        onAccepted: {
+            playlistModel.clear()
+            window.currentIndex = -1
+            player.stop()
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("确定要清空播放列表吗？\n所有歌曲将被移除。")
+                color: "black"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
             }
         }
     }

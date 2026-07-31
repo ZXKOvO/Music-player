@@ -53,6 +53,13 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: 0
 
+                    // 仅点击歌词文字本身才跳转，点击背景不触发
+                    TapHandler {
+                        enabled: !window.isAnyPopupOpen
+                        cursorShape: Qt.PointingHandCursor
+                        onTapped: player.seek(player.lyrics.timeAt(lineIdx))
+                    }
+
                     Repeater {
                         model: player.lyrics.textAt(lineIdx) || ""
 
@@ -63,13 +70,6 @@ Rectangle {
                             font.bold: isActive && index <= activeChar
                         }
                     }
-                }
-
-                // 点击歌词行跳转到对应时间点
-                TapHandler {
-                    enabled: !window.isAnyPopupOpen
-                    cursorShape: Qt.PointingHandCursor
-                    onTapped: player.seek(player.lyrics.timeAt(lineIdx))
                 }
             }
 
