@@ -3,7 +3,6 @@
 #include <QIcon>
 #include <QNetworkProxyFactory>
 #include <QQmlContext>
-#include "src/file_dialog_helper.h"
 #include "src/playlist_manager.h"
 #include "src/player_controller.h"
 #include "src/playlist_model.h"
@@ -21,7 +20,6 @@ int main(int argc, char *argv[])
     qmlRegisterType<LyricsParser>("MusicPlayer", 1, 0, "LyricsParser");
     qmlRegisterType<SongSearcher>("MusicPlayer", 1, 0, "SongSearcher");
     qmlRegisterType<SearchResultModel>("MusicPlayer", 1, 0, "SearchResultModel");
-    qmlRegisterType<FileDialogHelper>("MusicPlayer", 1, 0, "FileDialogHelper");
     QQmlApplicationEngine engine;
     QObject::connect(
         &engine,

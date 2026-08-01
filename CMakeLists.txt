@@ -54,8 +54,6 @@ qt_add_qml_module(MusicPlayer
         src/song_searcher.cpp
         src/search_result_model.h
         src/search_result_model.cpp
-        src/file_dialog_helper.h
-        src/file_dialog_helper.cpp
     QML_FILES
         Main.qml
         qml/pages/PlaylistsPage.qml
