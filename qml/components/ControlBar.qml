@@ -52,7 +52,8 @@ Rectangle {
                 Image {
                     id: coverImage
                     anchors.fill: parent
-                    source: player.hasCover ? "image://cover/current" : ""
+                    source: player.hasCover ? "image://cover/circle" : ""
+                    sourceSize: Qt.size(44, 44)
                     fillMode: Image.PreserveAspectCrop
                     cache: false
                     asynchronous: true
