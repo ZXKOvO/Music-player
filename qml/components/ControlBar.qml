@@ -43,6 +43,7 @@ Rectangle {
             spacing: 8
 
             Rectangle {
+                id: coverHolder
                 width: 44
                 height: 44
                 radius: 22
@@ -58,6 +59,23 @@ Rectangle {
                     cache: false
                     asynchronous: true
                     visible: status === Image.Ready
+                    // 播放时封面顺时针旋转
+                    rotation: parent.coverSpinAngle
+                }
+
+                // 封面旋转：播放中每帧顺时针旋转，暂停/停止时停住
+                property real coverSpinAngle: 0
+                Timer {
+                    interval: 16
+                    repeat: true
+                    running: player.playing && coverImage.visible
+                    onTriggered: parent.coverSpinAngle = (parent.coverSpinAngle + 0.5) % 360
+                }
+
+                // 切换歌曲时封面重新从 0° 开始旋转
+                Connections {
+                    target: player
+                    function onTitleChanged() { coverHolder.coverSpinAngle = 0 }
                 }
 
                 Text {

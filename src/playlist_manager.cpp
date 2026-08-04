@@ -5,8 +5,28 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSet>
 #include <QStandardPaths>
+#include <QUrl>
 #include <utility>
+
+// 规范化歌曲路径：去除 file:// 前缀、解析符号链接与 ..
+// 避免同一文件因路径形式不同被重复添加
+static QString normalizeSongPath(const QString &filePath)
+{
+    QString p = filePath.trimmed();
+    if (p.startsWith("file://", Qt::CaseInsensitive)) {
+        p = QUrl(p).toLocalFile();
+    }
+    QFileInfo info(p);
+    const QString canonical = info.canonicalFilePath(); // 解析符号链接与 ..
+    if (!canonical.isEmpty()) return canonical;
+    p = info.absoluteFilePath();
+#ifdef Q_OS_WIN
+    p = p.toLower();
+#endif
+    return p;
+}
 
 PlaylistManager::PlaylistManager(QObject *parent)
     : QAbstractListModel(parent)
@@ -55,23 +75,26 @@ void PlaylistManager::renamePlaylist(int index, const QString &newName)
     saveToFile();
 }
 
-// 向指定歌单添加歌曲，按歌名自动去重，返回是否成功
+// 向指定歌单添加歌曲，按规范化路径自动去重，返回是否成功
 // 如果是在线缓存歌曲（music cache），自动复制到 playlist/songs/ 永久保存
 bool PlaylistManager::addSongToPlaylist(int playlistIndex, const QString &filePath)
 {
     if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
-    if (containsSong(playlistIndex, filePath)) return false;
 
-    QString permanentPath = filePath;
+    // 规范化路径后判重，避免 file:// 前缀、符号链接等路径形式不同导致重复添加
+    QString normalized = normalizeSongPath(filePath);
+    if (containsSong(playlistIndex, normalized)) return false;
+
+    QString permanentPath = normalized;
     QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/music cache";
-    if (filePath.startsWith(cacheDir)) {
+    if (normalized.startsWith(cacheDir)) {
         QString songsDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/playlist/songs";
         QDir().mkpath(songsDir);
-        QString fileName = QFileInfo(filePath).fileName();
+        QString fileName = QFileInfo(normalized).fileName();
         permanentPath = songsDir + "/" + fileName;
         // 检查永久路径是否已在歌单中
         if (containsSong(playlistIndex, permanentPath)) return false;
-        if (!QFile::exists(permanentPath)) { QFile::copy(filePath, permanentPath); }
+        if (!QFile::exists(permanentPath)) { QFile::copy(normalized, permanentPath); }
     }
 
     Song s;
@@ -134,8 +157,9 @@ QString PlaylistManager::songTitle(int playlistIndex, int songIndex) const
 bool PlaylistManager::containsSong(int playlistIndex, const QString &filePath) const
 {
     if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
+    const QString needle = normalizeSongPath(filePath);
     for (const auto &s : std::as_const(playlists_[playlistIndex].songs)) {
-        if (s.filePath == filePath) return true;
+        if (normalizeSongPath(s.filePath) == needle) return true;
     }
     return false;
 }
@@ -247,10 +271,15 @@ void PlaylistManager::loadFromFile()
         UserPlaylist pl;
         pl.name = plObj["name"].toString();
         QJsonArray songsArray = plObj["songs"].toArray();
+        // 跳过历史重复项（如 file:// 前缀与纯路径同时存在），并统一为规范化路径
+        QSet<QString> seen;
         for (const auto &songVal : std::as_const(songsArray)) {
             QJsonObject songObj = songVal.toObject();
             Song s;
-            s.filePath = songObj["filePath"].toString();
+            const QString normalized = normalizeSongPath(songObj["filePath"].toString());
+            if (seen.contains(normalized)) continue;
+            seen.insert(normalized);
+            s.filePath = normalized;
             s.title = songObj["title"].toString();
             pl.songs.append(s);
         }
