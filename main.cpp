@@ -12,6 +12,8 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    QCoreApplication::setOrganizationName("MusicPlayer");
+    QCoreApplication::setApplicationName("MusicPlayer");
     QNetworkProxyFactory::setUseSystemConfiguration(false);
     app.setWindowIcon(QIcon(":/qt/qml/MusicPlayer/resources/icons/musicplayer_256.png"));
     qmlRegisterType<PlaylistManager>("MusicPlayer", 1, 0, "PlaylistManager");

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtQuick.Window
+import Qt.labs.settings
 import MusicPlayer
 
 // 主窗口：应用入口，管理全局状态和页面切换
@@ -20,6 +21,9 @@ ApplicationWindow {
     property int playlistSongVersion: 0     // 歌单歌曲变化版本号，用于触发 UI 刷新
     property bool isAnyPopupOpen: false     // 是否有弹窗打开，用于屏蔽歌词点击跳转
     property bool leftPanelVisible: true    // 左侧面板是否可见
+    property int lyricFontSize: 18          // 主歌词页当前行字号，范围 12~36，自动持久化
+    property int minLyricFontSize: 12
+    property int maxLyricFontSize: 36
 
     // 播放列表数据模型：管理当前播放队列和播放模式
     PlaylistModel { id: playlistModel }
@@ -59,6 +63,11 @@ ApplicationWindow {
     }
 
     property var desktopLyricsObj: null
+
+    // 持久化保存歌词字号设置
+    Settings {
+        property alias lyricFontSize: window.lyricFontSize
+    }
 
     // 懒加载创建桌面歌词窗口（首次使用时创建，后续复用）
     function ensureDesktopLyricsWindow() {
