@@ -8,9 +8,14 @@ Rectangle {
     id: root
     color: "black"
 
-    // 双击切换全屏
+    // 双击空白区域切换全屏（在按钮/滑块等控件上双击不触发，避免误退出全屏）
     TapHandler {
         onDoubleTapped: {
+            var t = root.childAt(eventPoint.position.x, eventPoint.position.y)
+            while (t && t !== root) {
+                if (t instanceof Control) return
+                t = t.parent
+            }
             if (window.visibility === Window.FullScreen) {
                 window.showNormal()
             } else {
@@ -27,26 +32,45 @@ Rectangle {
         return m + ":" + (s < 10 ? "0" : "") + s
     }
 
+    // 尺寸只依赖窗口高度（与控制栏高度解耦），全屏切歌/布局变化时不会变小
+    property real coverSize: window.isFullScreen
+                             ? Math.max(64, Math.min(window.height * 0.15, 96))
+                             : 44
+    Behavior on coverSize {
+        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+    }
+
+    // 全屏时左侧区域变宽、字号放大，避免大封面挤压歌曲信息
+    property bool isFullScreen: window.isFullScreen
+
     // 主布局：左侧歌曲信息 + 中间控制按钮 + 右侧功能按钮
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 12
         anchors.rightMargin: 150
         anchors.topMargin: 4
+        // 全屏时底部留更大边距，让封面整体上移，避免被屏幕底部遮挡
+        anchors.bottomMargin: root.isFullScreen ? 16 : 4
         spacing: 12
+        Behavior on anchors.bottomMargin {
+            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        }
 
         // 左侧：封面 + 歌曲信息 + 收藏
         RowLayout {
             Layout.fillWidth: false
-            Layout.preferredWidth: 220
+            Layout.preferredWidth: root.isFullScreen ? 400 : 220
             Layout.alignment: Qt.AlignVCenter
-            spacing: 8
+            spacing: root.isFullScreen ? 14 : 8
 
             Rectangle {
                 id: coverHolder
-                width: 44
-                height: 44
-                radius: 22
+                // 用 Layout.preferred* 表达尺寸：布局引擎按此值布局，
+                // 不会像直接绑定 width/height 那样被布局反复覆盖导致封面尺寸回跳
+                Layout.preferredWidth: root.coverSize
+                Layout.preferredHeight: root.coverSize
+                Layout.alignment: Qt.AlignVCenter
+                radius: root.coverSize / 2
                 color: "dimgray"
                 clip: true
 
@@ -54,7 +78,7 @@ Rectangle {
                     id: coverImage
                     anchors.fill: parent
                     source: player.hasCover ? "image://cover/circle" : ""
-                    sourceSize: Qt.size(44, 44)
+                    sourceSize: Qt.size(root.coverSize, root.coverSize)
                     fillMode: Image.PreserveAspectCrop
                     cache: false
                     asynchronous: true
@@ -81,7 +105,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: "\u266A"
-                    font.pixelSize: 22
+                    font.pixelSize: root.coverSize * 0.5
                     color: "dimgray"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -93,11 +117,13 @@ Rectangle {
                 spacing: 4
                 opacity: player.title !== "" ? 1 : 0
                 Layout.fillWidth: true
+                // 全屏时左侧加大间距，歌曲信息适当右移，不与封面重叠
+                Layout.leftMargin: root.isFullScreen ? 12 : 0
 
                 Label {
                     text: player.title || ""
                     color: "white"
-                    font.pixelSize: 14
+                    font.pixelSize: root.isFullScreen ? 18 : 14
                     font.bold: true
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -106,7 +132,7 @@ Rectangle {
                 Label {
                     text: player.artist || ""
                     color: "gray"
-                    font.pixelSize: 12
+                    font.pixelSize: root.isFullScreen ? 15 : 12
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }

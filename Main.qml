@@ -25,6 +25,9 @@ ApplicationWindow {
     property int minLyricFontSize: 12
     property int maxLyricFontSize: 36
 
+    // 全屏状态：按窗口几何尺寸判断（覆盖整个屏幕即视为全屏）
+    property bool isFullScreen: width >= Screen.width - 1 && height >= Screen.height - 1
+
     // 播放列表数据模型：管理当前播放队列和播放模式
     PlaylistModel { id: playlistModel }
 
@@ -90,7 +93,10 @@ ApplicationWindow {
             color: "transparent"
             flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
             x: (Screen.width - width) / 2
-            y: Screen.height - height - 100
+            // 全屏时上移到控制栏上方，避免桌面歌词文字遮挡圆形封面
+            y: Screen.height - height - (window.isFullScreen
+                                         ? Math.max(120, window.height * 0.2)
+                                         : 100)
 
             property int activeIndex: player.lyrics.lineAt(player.position)
             property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
@@ -544,7 +550,8 @@ ApplicationWindow {
         ControlBar {
             id: controlBar
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.max(48, window.height * 0.11)
+            // 全屏时控制栏加高，容纳放大的圆形封面
+            Layout.preferredHeight: Math.max(48, window.height * (window.isFullScreen ? 0.18 : 0.11))
         }
     }
 
