@@ -47,10 +47,9 @@ PlayerController::PlayerController(QObject *parent)
         sdlInited = true;
     }
 
-    // 从 QSettings 恢复上次保存的音量和桌面歌词设置
+    // 从 QSettings 恢复上次保存的音量
     float savedVol = settings_.value("volume", 1.0f).toFloat();
     audioOutput_.setVolume(savedVol);
-    showDesktopLyrics_ = settings_.value("showDesktopLyrics", false).toBool();
 }
 
 // 析构时停止解码线程、关闭音频设备和 SDL，并清空缓存
@@ -262,7 +261,6 @@ void PlayerController::setShowDesktopLyrics(bool show)
 {
     if (showDesktopLyrics_ == show) return;
     showDesktopLyrics_ = show;
-    settings_.setValue("showDesktopLyrics", show);
     emit showDesktopLyricsChanged();
 }
 

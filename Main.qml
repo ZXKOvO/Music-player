@@ -15,6 +15,9 @@ ApplicationWindow {
     title: qsTr("Music Player")
     color: "black"
 
+    // 主窗口关闭即退出程序
+    onClosing: Qt.quit()
+
     property int currentIndex: -1           // 当前播放歌曲在播放列表中的索引
     property string leftView: "search"      // 左侧面板当前显示的页面
     property int detailSongCount: 0         // 当前歌单详情页的歌曲数量
