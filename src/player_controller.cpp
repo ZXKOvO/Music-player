@@ -70,6 +70,13 @@ PlayerController::~PlayerController()
 // 播放指定文件路径，支持 file:/// URL 或本地路径
 void PlayerController::playFile(const QString &filePath)
 {
+    playFileWithMeta(filePath, QString(), QString());
+}
+
+// 播放文件并覆盖标题/歌手：歌单播放时传入歌单内保存的自定义标题，
+// 否则（title/artist 为空）仍按文件名 "歌手 - 歌名" 解析
+void PlayerController::playFileWithMeta(const QString &filePath, const QString &title, const QString &artist)
+{
     qDebug() << "playFile:" << filePath;
 
     // 先停止当前播放
@@ -99,6 +106,9 @@ void PlayerController::playFile(const QString &filePath)
     emit durationChanged();
 
     parseFileName(localPath, title_, artist_);
+    // 歌单传入的自定义标题/歌手覆盖文件名解析结果
+    if (!title.isEmpty()) { title_ = title; }
+    if (!artist.isEmpty()) { artist_ = artist; }
     emit titleChanged();
     emit artistChanged();
 
@@ -413,5 +423,18 @@ void PlayerController::parseFileName(const QString &filePath, QString &title, QS
     } else {
         artist.clear();
         title = baseName.trimmed();
+    }
+}
+
+// 覆盖当前歌曲显示标题/歌手：歌单内重命名后同步控制栏与桌面歌词等显示，不改音频文件
+void PlayerController::setTitleArtistOverride(const QString &title, const QString &artist)
+{
+    if (title_ != title) {
+        title_ = title;
+        emit titleChanged();
+    }
+    if (artist_ != artist) {
+        artist_ = artist;
+        emit artistChanged();
     }
 }

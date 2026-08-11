@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// 歌单列表页：显示用户创建的所有歌单
-// 单击加入播放列表，双击进入歌单详情
+// 歌单列表页：显示用户创建的所有歌单，单击进入歌单详情
+// 详情页双击歌曲会加入播放列表并播放
 ColumnLayout {
     id: root
     spacing: 8
@@ -52,23 +52,11 @@ ColumnLayout {
             color: plHover.hovered ? "whitesmoke" : "transparent"
 
             TapHandler {
-                // 双击进入歌单详情页
-                onDoubleTapped: {
+                // 单击进入歌单详情页（不播放、不添加播放列表）
+                onTapped: {
                     playlistManager.currentPlaylistIndex = index
                     window.leftView = "playlistDetail"
                     leftStackView.push(playlistDetailComp)
-                }
-                // 单击将歌单歌曲加载到播放列表并播放第一首
-                onTapped: {
-                    playlistManager.currentPlaylistIndex = index
-                    var count = playlistManager.playlistSongCount(index)
-                    if (count === 0) return
-                    playlistModel.clear()
-                    for (var i = 0; i < count; i++) {
-                        playlistModel.addFile(playlistManager.songFilePath(index, i))
-                    }
-                    window.currentIndex = 0
-                    player.playFile(playlistModel.filePath(0))
                 }
             }
 
@@ -110,6 +98,38 @@ ColumnLayout {
                         text: songCount + qsTr(" 首歌曲")
                         color: "gray"
                         font.pixelSize: 12
+                    }
+                }
+
+                // 播放按钮：将歌单内全部歌曲加入播放列表并播放第一首
+                Button {
+                    flat: true
+                    implicitWidth: 28
+                    implicitHeight: 28
+                    onClicked: {
+                        var count = playlistManager.playlistSongCount(index)
+                        if (count === 0) {
+                            window.showToast(qsTr("该歌单为空，请先添加歌曲"))
+                            return
+                        }
+                        playlistModel.clear()
+                        for (var i = 0; i < count; i++) {
+                            playlistModel.addFile(playlistManager.songFilePath(index, i))
+                        }
+                        window.currentIndex = 0
+                        player.playFile(playlistModel.filePath(0))
+                        window.showToast(qsTr("已播放歌单「") + name + qsTr("」"))
+                    }
+                    contentItem: Label {
+                        text: "\u25B6"
+                        color: "limegreen"
+                        font.pixelSize: 12
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "honeydew" : "transparent"
+                        radius: 4
                     }
                 }
 

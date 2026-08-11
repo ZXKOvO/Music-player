@@ -113,6 +113,22 @@ bool PlaylistManager::addSongToCurrentPlaylist(const QString &filePath)
     return addSongToPlaylist(currentPlaylistIndex_, filePath);
 }
 
+// 修改歌单内歌曲标题：只更新歌单 JSON 中的显示标题，不修改音频文件本身
+// 新的标题为空时回退为文件名，便于用户清空输入框还原
+bool PlaylistManager::setSongTitle(int playlistIndex, int songIndex, const QString &newTitle)
+{
+    if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
+    auto &songs = playlists_[playlistIndex].songs;
+    if (songIndex < 0 || songIndex >= songs.size()) return false;
+    QString title = newTitle.trimmed();
+    if (title.isEmpty()) { title = QFileInfo(songs[songIndex].filePath).completeBaseName(); }
+    if (songs[songIndex].title == title) return false;
+    songs[songIndex].title = title;
+    emit songsChanged();
+    saveToFile();
+    return true;
+}
+
 // 从当前歌单移除指定歌曲
 void PlaylistManager::removeSongFromCurrentPlaylist(int songIndex)
 {

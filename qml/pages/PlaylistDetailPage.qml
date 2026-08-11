@@ -68,9 +68,13 @@ ColumnLayout {
 
             property int songIndex: index
             property string songPath: playlistManager.songFilePath(playlistManager.currentPlaylistIndex, index)
-            property string songName: playlistManager.songTitle(playlistManager.currentPlaylistIndex, index)
+            property string songName: {
+                // 依赖版本号：歌单内标题修改后触发重新读取
+                var _v = window.playlistSongVersion
+                return playlistManager.songTitle(playlistManager.currentPlaylistIndex, index)
+            }
 
-            // 双击歌曲：添加到播放列表（如不存在）并播放
+            // 双击歌曲：添加到播放列表（如不存在）并播放，使用歌单内保存的标题
             TapHandler {
                 onDoubleTapped: {
                     if (!playlistModel.contains(songPath)) {
@@ -84,7 +88,9 @@ ColumnLayout {
                             break
                         }
                     }
-                    player.playFile(songPath)
+                    // 同步队列显示标题（歌单内可能已自定义修改过）
+                    playlistModel.setTitle(window.currentIndex, songName)
+                    player.playFileWithMeta(songPath, songName, "")
                 }
             }
 
@@ -112,6 +118,25 @@ ColumnLayout {
                     font.pixelSize: 14
                     elide: Text.ElideRight
                     Layout.fillWidth: true
+                }
+
+                Button {
+                    flat: true
+                    implicitWidth: 28
+                    implicitHeight: 28
+                    visible: dtHover.hovered
+                    onClicked: renameSongDialog.openWithIndex(songIndex)
+                    contentItem: Label {
+                        text: "\u270E"
+                        color: "dimgray"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "honeydew" : "transparent"
+                        radius: 4
+                    }
                 }
 
                 Button {
@@ -190,6 +215,89 @@ ColumnLayout {
             background: Rectangle {
                 color: parent.hovered ? "honeydew" : "transparent"
                 radius: 4
+            }
+        }
+    }
+
+    // 编辑歌曲标题对话框：只修改歌单内显示标题并保存到 JSON，不改音频文件
+    Dialog {
+        id: renameSongDialog
+        title: qsTr("编辑歌曲标题")
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 340
+        onOpened: {
+            window.isAnyPopupOpen = true
+            songTitleInput.forceActiveFocus()
+            songTitleInput.selectAll()
+        }
+        onClosed: window.isAnyPopupOpen = false
+        onAccepted: applySongTitle()
+        onRejected: targetIndex = -1
+
+        property int targetIndex: -1
+
+        function openWithIndex(idx) {
+            targetIndex = idx
+            songTitleInput.text = playlistManager.songTitle(playlistManager.currentPlaylistIndex, idx)
+            open()
+        }
+
+        // 应用修改：更新歌单 JSON，并同步播放队列与正在播放歌曲的显示
+        function applySongTitle() {
+            if (targetIndex < 0) return
+            var newTitle = songTitleInput.text.trim()
+            var plIdx = playlistManager.currentPlaylistIndex
+            if (newTitle.length === 0) { targetIndex = -1; return }
+            if (playlistManager.setSongTitle(plIdx, targetIndex, newTitle)) {
+                var path = playlistManager.songFilePath(plIdx, targetIndex)
+                var queueIdx = playlistModel.indexOf(path)
+                if (queueIdx >= 0) {
+                    playlistModel.setTitle(queueIdx, newTitle)
+                    if (queueIdx === window.currentIndex) {
+                        player.setTitleArtistOverride(newTitle, player.artist)
+                    }
+                }
+                window.showToast(qsTr("已修改标题"))
+            }
+            targetIndex = -1
+        }
+
+        background: Rectangle {
+            color: "white"
+            radius: 8
+        }
+
+        header: Rectangle {
+            color: "white"
+            implicitHeight: 44
+            radius: 8
+            Label {
+                anchors.left: parent.left
+                anchors.leftMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                text: qsTr("编辑歌曲标题")
+                color: "black"
+                font.pixelSize: 16
+                font.bold: true
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("请输入新的歌曲标题（仅保存到歌单，不改原文件）：")
+                color: "black"
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+            TextField {
+                id: songTitleInput
+                Layout.fillWidth: true
+                maximumLength: 60
+                onAccepted: renameSongDialog.accept()
             }
         }
     }
