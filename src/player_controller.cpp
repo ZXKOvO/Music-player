@@ -301,6 +301,18 @@ void PlayerController::registerCoverProvider()
     if (auto *ctx = QQmlEngine::contextForObject(this)) { ctx->engine()->addImageProvider("cover", &coverProvider_); }
 }
 
+// 预提取指定文件的内嵌封面并缓存到提供器，供歌单缩略图使用
+// 使用独立解码器实例，不干扰正在进行的播放
+void PlayerController::ensurePlaylistCover(const QString &filePath)
+{
+    if (filePath.isEmpty() || coverProvider_.hasFileCover(filePath)) return;
+    AudioDecoder tmp;
+    if (!tmp.open(filePath)) return;
+    const QByteArray data = tmp.coverData();
+    tmp.close();
+    if (!data.isEmpty()) { coverProvider_.setFileCover(filePath, data); }
+}
+
 // 定时轮询进度：经过时间 × 倍速 = 实际播放位置
 void PlayerController::onUpdatePosition()
 {

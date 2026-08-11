@@ -22,6 +22,7 @@ ApplicationWindow {
     property string leftView: "search"      // 左侧面板当前显示的页面
     property int detailSongCount: 0         // 当前歌单详情页的歌曲数量
     property int playlistSongVersion: 0     // 歌单歌曲变化版本号，用于触发 UI 刷新
+    property int playlistCoverVersion: 0    // 歌单封面预提取版本号，用于触发缩略图刷新
     property bool isAnyPopupOpen: false     // 是否有弹窗打开，用于屏蔽歌词点击跳转
     property bool leftPanelVisible: true    // 左侧面板是否可见
     property int lyricFontSize: 18          // 主歌词页当前行字号，范围 12~36，自动持久化
@@ -39,6 +40,8 @@ ApplicationWindow {
         id: playlistManager
         onSongsChanged: {
             playlistSongVersion++
+            // 歌单歌曲增删后第一首可能变化，重新提取封面并刷新缩略图
+            refreshPlaylistCovers()
             if (currentPlaylistIndex >= 0) {
                 detailSongCount = playlistSongCount(currentPlaylistIndex)
             } else {
@@ -69,6 +72,15 @@ ApplicationWindow {
     }
 
     property var desktopLyricsObj: null
+
+    // 预提取所有歌单第一首歌曲的封面并刷新缩略图版本号（已缓存的文件直接跳过）
+    function refreshPlaylistCovers() {
+        for (var i = 0; i < playlistManager.count; i++) {
+            var p = playlistManager.songFilePath(i, 0)
+            if (p !== "") { player.ensurePlaylistCover(p) }
+        }
+        playlistCoverVersion++
+    }
 
     // 持久化保存歌词字号设置
     Settings {

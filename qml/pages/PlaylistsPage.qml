@@ -7,6 +7,10 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
     spacing: 8
+
+    // 进入页面时预提取各歌单第一首歌曲封面，完成后刷新缩略图
+    Component.onCompleted: window.refreshPlaylistCovers()
+
     RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 12
@@ -70,13 +74,29 @@ ColumnLayout {
                 anchors.rightMargin: 12
                 spacing: 12
 
+                // 歌单封面：显示歌单内第一首歌曲的内嵌封面，无封面时回退为音符图标
                 Rectangle {
                     width: 40
                     height: 40
                     radius: 6
                     color: "limegreen"
+                    clip: true
+                    Image {
+                        id: plCoverImage
+                        anchors.fill: parent
+                        visible: source !== ""
+                        fillMode: Image.PreserveAspectCrop
+                        sourceSize: Qt.size(40, 40)
+                        source: {
+                            // 依赖版本号：封面预提取完成后重新请求图片
+                            var _v = window.playlistCoverVersion
+                            var p = playlistManager.songFilePath(index, 0)
+                            return p === "" ? "" : "image://cover/file/" + encodeURIComponent(p) + "?v=" + _v
+                        }
+                    }
                     Label {
                         anchors.centerIn: parent
+                        visible: !plCoverImage.visible
                         text: "\u266B"
                         color: "white"
                         font.pixelSize: 20
