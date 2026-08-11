@@ -29,8 +29,8 @@ ApplicationWindow {
     property int minLyricFontSize: 12
     property int maxLyricFontSize: 36
 
-    // 全屏状态：按窗口几何尺寸判断（覆盖整个屏幕即视为全屏）
-    property bool isFullScreen: width >= Screen.width - 1 && height >= Screen.height - 1
+    // 全屏状态：真全屏或最大化均按全屏布局显示，保证不同进入方式（双击控制栏/标题栏/最大化按钮）效果一致
+    property bool isFullScreen: visibility === Window.FullScreen || visibility === Window.Maximized
 
     // 播放列表数据模型：管理当前播放队列和播放模式
     PlaylistModel { id: playlistModel }
