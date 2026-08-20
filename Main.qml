@@ -33,11 +33,12 @@ ApplicationWindow {
     property bool isFullScreen: visibility === Window.FullScreen || visibility === Window.Maximized
 
     // 播放列表数据模型：管理当前播放队列和播放模式
-    PlaylistModel { id: playlistModel }
+    PlaylistModel { id: playlistModel; objectName: "playlistModel" }
 
     // 歌单管理器：管理用户创建的多个命名歌单，支持持久化
     PlaylistManager {
         id: playlistManager
+        objectName: "playlistManager"
         onSongsChanged: {
             playlistSongVersion++
             // 歌单歌曲增删后第一首可能变化，重新提取封面并刷新缩略图

@@ -37,6 +37,7 @@ public:
     Q_INVOKABLE bool addSongToPlaylist(int playlistIndex, const QString &filePath); // 向指定歌单添加歌曲，返回是否成功
     Q_INVOKABLE bool addSongToCurrentPlaylist(const QString &filePath);             // 向当前歌单添加歌曲，返回是否成功
     Q_INVOKABLE void removeSongFromCurrentPlaylist(int songIndex);                  // 从当前歌单移除歌曲
+    Q_INVOKABLE bool moveSong(int playlistIndex, int fromIndex, int toIndex);       // 移动歌单内歌曲位置并保存，返回是否成功
     Q_INVOKABLE QString playlistName(int index) const;
     Q_INVOKABLE int playlistSongCount(int index) const;
     Q_INVOKABLE QString songFilePath(int playlistIndex, int songIndex) const;

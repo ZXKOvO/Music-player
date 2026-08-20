@@ -44,6 +44,7 @@ ColumnLayout {
     // Playlist list
     ListView {
         id: playlistsListView
+        objectName: "playlistsListView"
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
@@ -51,6 +52,7 @@ ColumnLayout {
         spacing: 2
 
         delegate: Rectangle {
+            objectName: "playlistRowDelegate"
             width: playlistsListView.width
             height: 56
             color: plHover.hovered ? "whitesmoke" : "transparent"

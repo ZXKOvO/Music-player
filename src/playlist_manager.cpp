@@ -142,6 +142,21 @@ void PlaylistManager::removeSongFromCurrentPlaylist(int songIndex)
     saveToFile();
 }
 
+// 移动歌单内歌曲位置：把 fromIndex 位置的歌曲移动到 toIndex 位置，返回是否成功
+bool PlaylistManager::moveSong(int playlistIndex, int fromIndex, int toIndex)
+{
+    if (playlistIndex < 0 || playlistIndex >= playlists_.size()) return false;
+    auto &songs = playlists_[playlistIndex].songs;
+    if (fromIndex < 0 || fromIndex >= songs.size()) return false;
+    if (toIndex < 0) toIndex = 0;
+    if (toIndex >= songs.size()) toIndex = static_cast<int>(songs.size()) - 1;
+    if (fromIndex == toIndex) return false;
+    songs.move(fromIndex, toIndex);
+    emit songsChanged();
+    saveToFile();
+    return true;
+}
+
 QString PlaylistManager::playlistName(int index) const
 {
     if (index < 0 || index >= playlists_.size()) return {};
