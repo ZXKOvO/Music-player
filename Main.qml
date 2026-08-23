@@ -677,6 +677,55 @@ ApplicationWindow {
         }
     }
 
+    // 重命名歌单对话框：修改歌单名称并持久化，歌单列表页与详情页共用
+    ConfirmDialog {
+        id: renamePlaylistDialog
+        title: qsTr("重命名歌单")
+
+        property int targetIndex: -1
+
+        onOpened: {
+            window.isAnyPopupOpen = true
+            renamePlaylistNameInput.forceActiveFocus()
+            renamePlaylistNameInput.selectAll()
+        }
+        onClosed: {
+            window.isAnyPopupOpen = false
+            targetIndex = -1
+        }
+        onAccepted: {
+            var newName = renamePlaylistNameInput.text.trim()
+            if (targetIndex >= 0 && newName.length > 0) {
+                playlistManager.renamePlaylist(targetIndex, newName)
+                window.showToast(qsTr("已重命名为「") + newName + qsTr("」"))
+            }
+            targetIndex = -1
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("请输入新的歌单名称：")
+                color: "black"
+                font.pixelSize: 14
+            }
+            TextField {
+                id: renamePlaylistNameInput
+                Layout.fillWidth: true
+                placeholderText: qsTr("歌单名称")
+                maximumLength: 30
+                onAccepted: renamePlaylistDialog.accept()
+            }
+        }
+    }
+
+    // 打开重命名歌单对话框（预填原名称）
+    function openRenamePlaylistDialog(index, oldName) {
+        renamePlaylistDialog.targetIndex = index
+        renamePlaylistNameInput.text = oldName
+        renamePlaylistDialog.open()
+    }
+
     // 添加到歌单弹窗：选择歌曲添加到指定歌单
     Popup {
         id: addToPlaylistPopup

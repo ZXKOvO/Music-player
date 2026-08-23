@@ -155,6 +155,25 @@ ColumnLayout {
                     }
                 }
 
+                // 重命名按钮：修改歌单名称
+                Button {
+                    flat: true
+                    implicitWidth: 28
+                    implicitHeight: 28
+                    onClicked: window.openRenamePlaylistDialog(index, name)
+                    contentItem: Label {
+                        text: "\u270E"
+                        color: "dimgray"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.hovered ? "honeydew" : "transparent"
+                        radius: 4
+                    }
+                }
+
                 Button {
                     flat: true
                     implicitWidth: 28

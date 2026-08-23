@@ -105,6 +105,25 @@ import QtQuick.Layouts
             elide: Text.ElideRight
             Layout.fillWidth: true
         }
+        // 重命名歌单按钮：修改当前歌单名称
+        Button {
+            flat: true
+            implicitWidth: 28
+            implicitHeight: 28
+            onClicked: window.openRenamePlaylistDialog(playlistManager.currentPlaylistIndex,
+                                                       playlistManager.currentPlaylistName)
+            contentItem: Label {
+                text: "\u270E"
+                color: "dimgray"
+                font.pixelSize: 16
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            background: Rectangle {
+                color: parent.hovered ? "honeydew" : "transparent"
+                radius: 4
+            }
+        }
     }
 
     // Separator

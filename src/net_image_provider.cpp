@@ -7,7 +7,6 @@ NetImageProvider::NetImageProvider()
 // QML 请求图片回调，支持 requestedSize 缩放
 QImage NetImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)
 {
-    // id 格式: "123456?v=1"，去掉 ? 及后面的部分
     QString cleanId = id;
     int qPos = cleanId.indexOf('?');
     if (qPos >= 0) cleanId = cleanId.left(qPos);
