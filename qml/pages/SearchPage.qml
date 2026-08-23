@@ -102,11 +102,22 @@ ColumnLayout {
 
         // 每行歌曲条目
         delegate: Rectangle {
+            id: delegateRoot
             width: resultView.width
-            height: 56
+            height: 64
             color: resultHover.hovered ? "whitesmoke" : "transparent"
 
             property int songDuration: duration  // 歌曲时长（秒）
+            property int coverVersion: 0
+
+            Connections {
+                target: songSearcher.model
+                function onCoverReady(row) {
+                    if (row === index) {
+                        delegateRoot.coverVersion++
+                    }
+                }
+            }
 
             HoverHandler {
                 id: resultHover
@@ -125,6 +136,25 @@ ColumnLayout {
                     font.pixelSize: 13
                     Layout.preferredWidth: 28
                     horizontalAlignment: Text.AlignRight
+                }
+
+                // 专辑封面
+                Image {
+                    id: coverImg
+                    Layout.preferredWidth: 48
+                    Layout.preferredHeight: 48
+                    source: songId ? "image://net/" + songId + "?v=" + coverVersion : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    clip: true
+                    sourceSize: Qt.size(48, 48)
+                    Rectangle {
+                        anchors.fill: parent
+                        border.color: "#e0e0e0"
+                        border.width: 1
+                        color: "transparent"
+                        radius: 4
+                    }
                 }
 
                 // 歌曲信息列：歌名 + 艺术家 · 专辑 · 时长

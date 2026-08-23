@@ -9,6 +9,7 @@
 #include "src/lyrics_parser.h"
 #include "src/song_searcher.h"
 #include "src/search_result_model.h"
+#include "src/net_image_provider.h"
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -23,6 +24,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<SongSearcher>("MusicPlayer", 1, 0, "SongSearcher");
     qmlRegisterType<SearchResultModel>("MusicPlayer", 1, 0, "SearchResultModel");
     QQmlApplicationEngine engine;
+    NetImageProvider *netImgProvider = new NetImageProvider;
+    engine.addImageProvider("net", netImgProvider);
+    NetImageProvider::setInstance(netImgProvider);
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

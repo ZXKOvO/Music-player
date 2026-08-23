@@ -37,6 +37,8 @@ public:
 
     // 设置搜索结果
     void setResults(const QList<SearchResult> &results);
+    // 通知指定行封面已就绪
+    void setCoverReady(int row);
     // 清空结果
     void clear();
 
@@ -54,6 +56,7 @@ public:
 
 signals:
     void countChanged();
+    void coverReady(int row);
 
 private:
     QList<SearchResult> results_; // 搜索结果列表
