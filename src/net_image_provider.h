@@ -17,6 +17,8 @@ public:
     void setCoverData(int songId, const QByteArray &data);
     // 指定歌曲封面是否已缓存
     bool hasCover(int songId) const;
+    // 获取指定歌曲封面的原始字节数据
+    QByteArray getRawCoverData(int songId) const;
 
     static void setInstance(NetImageProvider *inst) { s_instance = inst; }
     static NetImageProvider *instance() { return s_instance; }

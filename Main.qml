@@ -361,10 +361,16 @@ ApplicationWindow {
         id: songSearcher
 
         // 歌曲下载完成回调
-        onSongUrlReady: function(filePath, songName, artist) {
+        onSongUrlReady: function(filePath, songName, artist, songId) {
             // 如果播放列表中没有此歌曲，则添加
             if (!playlistModel.contains(filePath)) {
                 playlistModel.addFile(filePath)
+                // 设置正确的歌曲名和艺术家（避免文件名中的ID前缀）
+                var idx = playlistModel.indexOf(filePath)
+                if (idx >= 0) {
+                    playlistModel.setTitle(idx, songName)
+                    playlistModel.setArtist(idx, artist)
+                }
             }
             // 如果是播放模式，自动播放该歌曲
             if (pendingPlay) {
@@ -372,7 +378,9 @@ ApplicationWindow {
                 var idx = playlistModel.indexOf(filePath)
                 if (idx >= 0) {
                     window.currentIndex = idx
-                    player.playFile(filePath)
+                    player.playFileWithMeta(filePath, songName, artist)
+                    // 设置在线歌曲封面
+                    player.setOnlineCoverById(songId)
                 }
             }
             window.showToast(qsTr("已添加: %1").arg(songName))

@@ -44,3 +44,10 @@ bool NetImageProvider::hasCover(int songId) const
     QMutexLocker lock(&mutex_);
     return imageCache_.contains(songId);
 }
+
+// 获取指定歌曲封面的原始字节数据
+QByteArray NetImageProvider::getRawCoverData(int songId) const
+{
+    QMutexLocker lock(&mutex_);
+    return cache_.value(songId);
+}

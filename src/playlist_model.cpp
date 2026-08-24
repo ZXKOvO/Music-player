@@ -53,6 +53,16 @@ void PlaylistModel::setTitle(int row, const QString &title)
     emit dataChanged(idx, idx, {TitleRole});
 }
 
+// 设置指定行歌曲艺术家
+void PlaylistModel::setArtist(int row, const QString &artist)
+{
+    if (row < 0 || row >= songs_.size()) return;
+    if (songs_[row].artist == artist) return;
+    songs_[row].artist = artist;
+    QModelIndex idx = createIndex(row, 0);
+    emit dataChanged(idx, idx, {ArtistRole});
+}
+
 // 清空列表
 void PlaylistModel::clear()
 {

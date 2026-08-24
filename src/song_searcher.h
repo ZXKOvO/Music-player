@@ -41,7 +41,7 @@ signals:
     void errorMessageChanged();
     void pendingPlayChanged();
     // 歌曲下载完成，返回本地文件路径
-    void songUrlReady(const QString &filePath, const QString &songName, const QString &artist);
+    void songUrlReady(const QString &filePath, const QString &songName, const QString &artist, int songId);
     // 歌曲下载失败
     void songUrlFailed(const QString &songName, const QString &reason);
 

@@ -233,7 +233,7 @@ void SongSearcher::getSongUrl(int songId, const QString &songName, const QString
         file.close();
 
         qDebug() << "SongSearcher: downloaded" << songName << "to" << filePath << "size=" << data.size();
-        emit songUrlReady(filePath, songName, artist);
+        emit songUrlReady(filePath, songName, artist, songId);
     });
 }
 

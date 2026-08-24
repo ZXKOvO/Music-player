@@ -48,6 +48,10 @@ public:
     Q_INVOKABLE void startWindowSystemMove(QObject *window);
     // 覆盖当前歌曲显示标题/歌手（歌单重命名后同步界面，不改音频文件）
     Q_INVOKABLE void setTitleArtistOverride(const QString &title, const QString &artist);
+    // 设置在线歌曲封面（从网络图片缓存获取的原始字节数据）
+    Q_INVOKABLE void setOnlineCover(const QByteArray &coverData);
+    // 通过 songId 从网络图片缓存获取封面并设置
+    Q_INVOKABLE void setOnlineCoverById(int songId);
     // 预提取指定文件的封面并缓存（歌单缩略图用），已缓存则直接返回
     Q_INVOKABLE void ensurePlaylistCover(const QString &filePath);
 

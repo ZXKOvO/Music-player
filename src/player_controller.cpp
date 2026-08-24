@@ -1,5 +1,6 @@
 #include "player_controller.h"
 #include "cover_image_provider.h"
+#include "net_image_provider.h"
 #include <QFileInfo>
 #include <QUrl>
 #include <QDebug>
@@ -448,5 +449,29 @@ void PlayerController::setTitleArtistOverride(const QString &title, const QStrin
     if (artist_ != artist) {
         artist_ = artist;
         emit artistChanged();
+    }
+}
+
+// 设置在线歌曲封面（从网络图片缓存获取的原始字节数据）
+void PlayerController::setOnlineCover(const QByteArray &coverData)
+{
+    if (!coverData.isEmpty()) {
+        coverProvider_.setCoverData(coverData);
+        if (!hasCover_) {
+            hasCover_ = true;
+            emit hasCoverChanged();
+        }
+    }
+}
+
+// 通过 songId 从网络图片缓存获取封面并设置
+void PlayerController::setOnlineCoverById(int songId)
+{
+    if (songId <= 0) return;
+    if (auto *provider = NetImageProvider::instance()) {
+        QByteArray data = provider->getRawCoverData(songId);
+        if (!data.isEmpty()) {
+            setOnlineCover(data);
+        }
     }
 }

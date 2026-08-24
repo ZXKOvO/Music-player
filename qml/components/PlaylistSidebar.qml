@@ -134,7 +134,7 @@ Rectangle {
                     // 双击歌曲条目：设置为当前播放并开始播放
                     onDoubleTapped: {
                         window.currentIndex = index
-                        player.playFile(filePath)
+                        player.playFileWithMeta(filePath, title || "", artist || "")
                     }
                 }
 

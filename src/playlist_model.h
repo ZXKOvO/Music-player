@@ -41,6 +41,7 @@ public:
     Q_INVOKABLE void remove(int row);
     // 设置指定行歌曲标题（歌单重命名后同步队列显示用）
     Q_INVOKABLE void setTitle(int row, const QString &title);
+    Q_INVOKABLE void setArtist(int row, const QString &artist);
     // 清空列表
     Q_INVOKABLE void clear();
 
