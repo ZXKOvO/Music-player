@@ -1,4 +1,5 @@
 #include "song_searcher.h"
+#include "net_image_provider.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -8,7 +9,6 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
-#include <utility>
 #include <QRegularExpression>
 #include <QDebug>
 
@@ -133,6 +133,9 @@ void SongSearcher::filterPlayable(const QList<SearchResult> &candidates, int req
             model_->setResults(candidates);
             searching_ = false;
             emit searchingChanged();
+
+            // 获取歌曲详情（含封面URL），完成后下载封面
+            fetchSongDetails(candidates, requestId);
             return;
         }
 
@@ -168,6 +171,9 @@ void SongSearcher::filterPlayable(const QList<SearchResult> &candidates, int req
         model_->setResults(filtered);
         searching_ = false;
         emit searchingChanged();
+
+        // 获取歌曲详情（含封面URL），完成后下载封面
+        fetchSongDetails(filtered, requestId);
     });
 }
 
@@ -227,6 +233,98 @@ void SongSearcher::getSongUrl(int songId, const QString &songName, const QString
         file.close();
 
         qDebug() << "SongSearcher: downloaded" << songName << "to" << filePath << "size=" << data.size();
-        emit songUrlReady(filePath, songName, artist);
+        emit songUrlReady(filePath, songName, artist, songId);
     });
+}
+
+// 获取歌曲详情（含封面URL）
+void SongSearcher::fetchSongDetails(QList<SearchResult> results, int requestId)
+{
+    if (results.isEmpty()) return;
+
+    QStringList idStrs;
+    for (const auto &r : results) {
+        idStrs.append(QString::number(r.songId));
+    }
+
+    QNetworkRequest req(QUrl("https://music.163.com/api/song/detail"));
+    req.setRawHeader("Referer", "https://music.163.com/");
+    req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    QByteArray body = "id=" + idStrs.first().toUtf8() + "&ids=[" + idStrs.join(",").toUtf8() + "]";
+
+    QNetworkReply *reply = netMgr_->post(req, body);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, results, requestId]() mutable {
+        reply->deleteLater();
+        if (requestId != searchRequestId_) return;
+
+        if (reply->error() != QNetworkReply::NoError) {
+            qWarning() << "SongSearcher: fetchSongDetails failed:" << reply->errorString();
+            downloadCovers(results, requestId);
+            return;
+        }
+
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        QJsonArray songs = doc.object().value("songs").toArray();
+
+        // 构建 songId -> picUrl 映射
+        QHash<int, QString> picUrlMap;
+        for (const auto &s : std::as_const(songs)) {
+            QJsonObject song = s.toObject();
+            int id = song.value("id").toInt();
+            QString picUrl = song.value("album").toObject().value("picUrl").toString();
+            if (!picUrl.isEmpty()) {
+                picUrlMap.insert(id, picUrl);
+            }
+        }
+
+        // 更新候选列表中的 coverUrl
+        for (auto &r : results) {
+            if (picUrlMap.contains(r.songId)) {
+                r.coverUrl = picUrlMap.value(r.songId);
+            }
+        }
+
+        qDebug() << "SongSearcher: got picUrl for" << picUrlMap.size() << "of" << results.size() << "songs";
+
+        downloadCovers(results, requestId);
+    });
+}
+
+// 批量下载封面图片，存入内存缓存
+void SongSearcher::downloadCovers(const QList<SearchResult> &results, int requestId)
+{
+    for (int i = 0; i < results.size(); ++i) {
+        if (requestId != searchRequestId_) return;
+
+        const SearchResult &r = results[i];
+        if (r.coverUrl.isEmpty()) continue;
+
+        // 已缓存则直接通知
+        if (auto *provider = NetImageProvider::instance()) {
+            if (provider->hasCover(r.songId)) {
+                model_->setCoverReady(i);
+                continue;
+            }
+        }
+
+        QNetworkRequest req(QUrl(r.coverUrl));
+        req.setRawHeader("Referer", "https://music.163.com/");
+
+        QNetworkReply *reply = netMgr_->get(req);
+        connect(reply, &QNetworkReply::finished, this, [this, reply, requestId, row = i, songId = r.songId]() {
+            reply->deleteLater();
+            if (requestId != searchRequestId_) return;
+
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray data = reply->readAll();
+                if (data.size() > 100) {
+                    if (auto *provider = NetImageProvider::instance())
+                        provider->setCoverData(songId, data);
+                    model_->setCoverReady(row);
+                }
+            }
+        });
+    }
 }

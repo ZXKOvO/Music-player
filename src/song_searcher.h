@@ -41,18 +41,22 @@ signals:
     void errorMessageChanged();
     void pendingPlayChanged();
     // 歌曲下载完成，返回本地文件路径
-    void songUrlReady(const QString &filePath, const QString &songName, const QString &artist);
+    void songUrlReady(const QString &filePath, const QString &songName, const QString &artist, int songId);
     // 歌曲下载失败
     void songUrlFailed(const QString &songName, const QString &reason);
 
 private:
     // 过滤可播放歌曲：通过API批量查询歌曲播放状态
     void filterPlayable(const QList<SearchResult> &candidates, int requestId);
+    // 获取歌曲详情（含封面URL）
+    void fetchSongDetails(QList<SearchResult> results, int requestId);
+    // 批量下载封面图片
+    void downloadCovers(const QList<SearchResult> &results, int requestId);
 
-    QNetworkAccessManager *netMgr_; // 网络管理器
-    SearchResultModel *model_;      // 搜索结果数据模型
-    bool searching_ = false;        // 搜索状态标志
-    QString errorMessage_;          // 错误信息
-    bool pendingPlay_ = false;      // 播放/添加模式标志
-    int searchRequestId_ = 0;       // 请求ID，用于防止旧请求干扰
+    QNetworkAccessManager *netMgr_;       // 网络管理器
+    SearchResultModel *model_;            // 搜索结果数据模型
+    bool searching_ = false;              // 搜索状态标志
+    QString errorMessage_;                // 错误信息
+    bool pendingPlay_ = false;            // 播放/添加模式标志
+    int searchRequestId_ = 0;             // 请求ID，用于防止旧请求干扰
 };

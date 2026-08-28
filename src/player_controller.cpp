@@ -1,5 +1,6 @@
 #include "player_controller.h"
 #include "cover_image_provider.h"
+#include "net_image_provider.h"
 #include <QFileInfo>
 #include <QUrl>
 #include <QDebug>
@@ -47,10 +48,9 @@ PlayerController::PlayerController(QObject *parent)
         sdlInited = true;
     }
 
-    // 从 QSettings 恢复上次保存的音量和桌面歌词设置
+    // 从 QSettings 恢复上次保存的音量
     float savedVol = settings_.value("volume", 1.0f).toFloat();
     audioOutput_.setVolume(savedVol);
-    showDesktopLyrics_ = settings_.value("showDesktopLyrics", false).toBool();
 }
 
 // 析构时停止解码线程、关闭音频设备和 SDL，并清空缓存
@@ -70,6 +70,13 @@ PlayerController::~PlayerController()
 
 // 播放指定文件路径，支持 file:/// URL 或本地路径
 void PlayerController::playFile(const QString &filePath)
+{
+    playFileWithMeta(filePath, QString(), QString());
+}
+
+// 播放文件并覆盖标题/歌手：歌单播放时传入歌单内保存的自定义标题，
+// 否则（title/artist 为空）仍按文件名 "歌手 - 歌名" 解析
+void PlayerController::playFileWithMeta(const QString &filePath, const QString &title, const QString &artist)
 {
     qDebug() << "playFile:" << filePath;
 
@@ -100,6 +107,9 @@ void PlayerController::playFile(const QString &filePath)
     emit durationChanged();
 
     parseFileName(localPath, title_, artist_);
+    // 歌单传入的自定义标题/歌手覆盖文件名解析结果
+    if (!title.isEmpty()) { title_ = title; }
+    if (!artist.isEmpty()) { artist_ = artist; }
     emit titleChanged();
     emit artistChanged();
 
@@ -262,7 +272,6 @@ void PlayerController::setShowDesktopLyrics(bool show)
 {
     if (showDesktopLyrics_ == show) return;
     showDesktopLyrics_ = show;
-    settings_.setValue("showDesktopLyrics", show);
     emit showDesktopLyricsChanged();
 }
 
@@ -291,6 +300,18 @@ void PlayerController::setPlaybackSpeed(double speed)
 void PlayerController::registerCoverProvider()
 {
     if (auto *ctx = QQmlEngine::contextForObject(this)) { ctx->engine()->addImageProvider("cover", &coverProvider_); }
+}
+
+// 预提取指定文件的内嵌封面并缓存到提供器，供歌单缩略图使用
+// 使用独立解码器实例，不干扰正在进行的播放
+void PlayerController::ensurePlaylistCover(const QString &filePath)
+{
+    if (filePath.isEmpty() || coverProvider_.hasFileCover(filePath)) return;
+    AudioDecoder tmp;
+    if (!tmp.open(filePath)) return;
+    const QByteArray data = tmp.coverData();
+    tmp.close();
+    if (!data.isEmpty()) { coverProvider_.setFileCover(filePath, data); }
 }
 
 // 定时轮询进度：经过时间 × 倍速 = 实际播放位置
@@ -415,5 +436,42 @@ void PlayerController::parseFileName(const QString &filePath, QString &title, QS
     } else {
         artist.clear();
         title = baseName.trimmed();
+    }
+}
+
+// 覆盖当前歌曲显示标题/歌手：歌单内重命名后同步控制栏与桌面歌词等显示，不改音频文件
+void PlayerController::setTitleArtistOverride(const QString &title, const QString &artist)
+{
+    if (title_ != title) {
+        title_ = title;
+        emit titleChanged();
+    }
+    if (artist_ != artist) {
+        artist_ = artist;
+        emit artistChanged();
+    }
+}
+
+// 设置在线歌曲封面（从网络图片缓存获取的原始字节数据）
+void PlayerController::setOnlineCover(const QByteArray &coverData)
+{
+    if (!coverData.isEmpty()) {
+        coverProvider_.setCoverData(coverData);
+        if (!hasCover_) {
+            hasCover_ = true;
+            emit hasCoverChanged();
+        }
+    }
+}
+
+// 通过 songId 从网络图片缓存获取封面并设置
+void PlayerController::setOnlineCoverById(int songId)
+{
+    if (songId <= 0) return;
+    if (auto *provider = NetImageProvider::instance()) {
+        QByteArray data = provider->getRawCoverData(songId);
+        if (!data.isEmpty()) {
+            setOnlineCover(data);
+        }
     }
 }

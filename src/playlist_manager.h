@@ -32,9 +32,12 @@ public:
     Q_INVOKABLE void createPlaylist(const QString &name);                           // 创建歌单
     Q_INVOKABLE void deletePlaylist(int index);                                     // 删除歌单
     Q_INVOKABLE void renamePlaylist(int index, const QString &newName);             // 重命名歌单
+    Q_INVOKABLE bool setSongTitle(int playlistIndex, int songIndex,
+                                  const QString &newTitle); // 修改歌单内歌曲标题（仅存歌单 JSON，不改文件），返回是否成功
     Q_INVOKABLE bool addSongToPlaylist(int playlistIndex, const QString &filePath); // 向指定歌单添加歌曲，返回是否成功
     Q_INVOKABLE bool addSongToCurrentPlaylist(const QString &filePath);             // 向当前歌单添加歌曲，返回是否成功
     Q_INVOKABLE void removeSongFromCurrentPlaylist(int songIndex);                  // 从当前歌单移除歌曲
+    Q_INVOKABLE bool moveSong(int playlistIndex, int fromIndex, int toIndex);       // 移动歌单内歌曲位置并保存，返回是否成功
     Q_INVOKABLE QString playlistName(int index) const;
     Q_INVOKABLE int playlistSongCount(int index) const;
     Q_INVOKABLE QString songFilePath(int playlistIndex, int songIndex) const;

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtQuick.Window
+import Qt.labs.settings
 import MusicPlayer
 
 // 主窗口：应用入口，管理全局状态和页面切换
@@ -14,20 +15,34 @@ ApplicationWindow {
     title: qsTr("Music Player")
     color: "black"
 
+    // 主窗口关闭即退出程序
+    onClosing: Qt.quit()
+
     property int currentIndex: -1           // 当前播放歌曲在播放列表中的索引
     property string leftView: "search"      // 左侧面板当前显示的页面
     property int detailSongCount: 0         // 当前歌单详情页的歌曲数量
     property int playlistSongVersion: 0     // 歌单歌曲变化版本号，用于触发 UI 刷新
+    property int playlistCoverVersion: 0    // 歌单封面预提取版本号，用于触发缩略图刷新
     property bool isAnyPopupOpen: false     // 是否有弹窗打开，用于屏蔽歌词点击跳转
+    property bool leftPanelVisible: true    // 左侧面板是否可见
+    property int lyricFontSize: 18          // 主歌词页当前行字号，范围 12~36，自动持久化
+    property int minLyricFontSize: 12
+    property int maxLyricFontSize: 36
+
+    // 全屏状态：真全屏或最大化均按全屏布局显示，保证不同进入方式（双击控制栏/标题栏/最大化按钮）效果一致
+    property bool isFullScreen: visibility === Window.FullScreen || visibility === Window.Maximized
 
     // 播放列表数据模型：管理当前播放队列和播放模式
-    PlaylistModel { id: playlistModel }
+    PlaylistModel { id: playlistModel; objectName: "playlistModel" }
 
     // 歌单管理器：管理用户创建的多个命名歌单，支持持久化
     PlaylistManager {
         id: playlistManager
+        objectName: "playlistManager"
         onSongsChanged: {
             playlistSongVersion++
+            // 歌单歌曲增删后第一首可能变化，重新提取封面并刷新缩略图
+            refreshPlaylistCovers()
             if (currentPlaylistIndex >= 0) {
                 detailSongCount = playlistSongCount(currentPlaylistIndex)
             } else {
@@ -59,6 +74,20 @@ ApplicationWindow {
 
     property var desktopLyricsObj: null
 
+    // 预提取所有歌单第一首歌曲的封面并刷新缩略图版本号（已缓存的文件直接跳过）
+    function refreshPlaylistCovers() {
+        for (var i = 0; i < playlistManager.count; i++) {
+            var p = playlistManager.songFilePath(i, 0)
+            if (p !== "") { player.ensurePlaylistCover(p) }
+        }
+        playlistCoverVersion++
+    }
+
+    // 持久化保存歌词字号设置
+    Settings {
+        property alias lyricFontSize: window.lyricFontSize
+    }
+
     // 懒加载创建桌面歌词窗口（首次使用时创建，后续复用）
     function ensureDesktopLyricsWindow() {
         if (!desktopLyricsObj) {
@@ -74,13 +103,16 @@ ApplicationWindow {
         Window {
             id: desktopLyricsWindow
             width: 500
-            height: 100
+            height: 120
             visible: true
             title: qsTr("桌面歌词")
             color: "transparent"
             flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
             x: (Screen.width - width) / 2
-            y: Screen.height - height - 100
+            // 全屏时上移到控制栏上方，避免桌面歌词文字遮挡圆形封面
+            y: Screen.height - height - (window.isFullScreen
+                                         ? Math.max(120, window.height * 0.2)
+                                         : 100)
 
             property int activeIndex: player.lyrics.lineAt(player.position)
             property int nextIndex: activeIndex + 1 < player.lyrics.lineCount ? activeIndex + 1 : -1
@@ -88,6 +120,7 @@ ApplicationWindow {
             property var colorList: ["green", "cyan", "yellow", "orange", "deeppink", "purple", "white"]
 
             Rectangle {
+                id: desktopLyricsBg
                 anchors.fill: parent
                 color: Qt.rgba(0.1, 0.1, 0.1, 0.8)
                 radius: 10
@@ -235,6 +268,78 @@ ApplicationWindow {
                         }
                     }
 
+                    // 进度条：显示当前播放进度，支持拖动
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 16
+                        Layout.leftMargin: 12
+                        Layout.rightMargin: 12
+                        spacing: 6
+
+                        Label {
+                            id: desktopCurrentTimeLabel
+                            text: {
+                                var pos = desktopProgressSlider.pressed ? desktopProgressSlider.value : player.position
+                                if (!isFinite(pos) || pos < 0) return "0:00"
+                                var m = Math.floor(pos / 60)
+                                var s = Math.floor(pos % 60)
+                                return m + ":" + (s < 10 ? "0" : "") + s
+                            }
+                            color: "lightgray"
+                            font.pixelSize: 9
+                            Layout.preferredWidth: 28
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        Slider {
+                            id: desktopProgressSlider
+                            Layout.fillWidth: true
+                            from: 0
+                            to: player.duration || 1
+                            value: pressed ? value : player.position
+                            enabled: player.title !== ""
+                            onMoved: player.seek(value)
+                            background: Rectangle {
+                                x: desktopProgressSlider.leftPadding
+                                y: desktopProgressSlider.topPadding + desktopProgressSlider.availableHeight / 2 - height / 2
+                                implicitHeight: 2
+                                width: desktopProgressSlider.availableWidth
+                                height: implicitHeight
+                                radius: 1
+                                color: "gray"
+
+                                Rectangle {
+                                    width: desktopProgressSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    color: "limegreen"
+                                    radius: 1
+                                }
+                            }
+                            handle: Rectangle {
+                                x: desktopProgressSlider.leftPadding + desktopProgressSlider.visualPosition * (desktopProgressSlider.availableWidth - width)
+                                y: desktopProgressSlider.topPadding + desktopProgressSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 8
+                                implicitHeight: 8
+                                radius: 4
+                                color: desktopProgressSlider.pressed ? "limegreen" : "white"
+                            }
+                        }
+
+                        Label {
+                            id: desktopDurationLabel
+                            text: {
+                                var dur = player.duration
+                                if (!isFinite(dur) || dur < 0) return "0:00"
+                                var m = Math.floor(dur / 60)
+                                var s = Math.floor(dur % 60)
+                                return m + ":" + (s < 10 ? "0" : "") + s
+                            }
+                            color: "lightgray"
+                            font.pixelSize: 9
+                            Layout.preferredWidth: 28
+                        }
+                    }
+
                     // 分割线
                     Rectangle {
                         Layout.fillWidth: true
@@ -311,13 +416,13 @@ ApplicationWindow {
                         }
                     }
                 }
-            }
 
-            TapHandler {
-                acceptedButtons: Qt.LeftButton
-                onPressedChanged: {
-                    if (pressed) {
-                        player.startWindowSystemMove(desktopLyricsWindow)
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onPressedChanged: {
+                        if (pressed) {
+                            player.startWindowSystemMove(desktopLyricsWindow)
+                        }
                     }
                 }
             }
@@ -329,10 +434,16 @@ ApplicationWindow {
         id: songSearcher
 
         // 歌曲下载完成回调
-        onSongUrlReady: function(filePath, songName, artist) {
+        onSongUrlReady: function(filePath, songName, artist, songId) {
             // 如果播放列表中没有此歌曲，则添加
             if (!playlistModel.contains(filePath)) {
                 playlistModel.addFile(filePath)
+                // 设置正确的歌曲名和艺术家（避免文件名中的ID前缀）
+                var idx = playlistModel.indexOf(filePath)
+                if (idx >= 0) {
+                    playlistModel.setTitle(idx, songName)
+                    playlistModel.setArtist(idx, artist)
+                }
             }
             // 如果是播放模式，自动播放该歌曲
             if (pendingPlay) {
@@ -340,7 +451,9 @@ ApplicationWindow {
                 var idx = playlistModel.indexOf(filePath)
                 if (idx >= 0) {
                     window.currentIndex = idx
-                    player.playFile(filePath)
+                    player.playFileWithMeta(filePath, songName, artist)
+                    // 设置在线歌曲封面
+                    player.setOnlineCoverById(songId)
                 }
             }
             window.showToast(qsTr("已添加: %1").arg(songName))
@@ -363,10 +476,12 @@ ApplicationWindow {
             Layout.fillHeight: true
             spacing: 0
 
-            // 左侧面板：搜索 + 我的歌单
+            // 左侧面板：搜索 + 我的歌单（可折叠）
             Rectangle {
+                id: leftPanel
                 Layout.fillHeight: true
                 Layout.preferredWidth: 350
+                visible: window.leftPanelVisible
                 color: "white"
 
                 ColumnLayout {
@@ -463,11 +578,62 @@ ApplicationWindow {
                 }
             }
 
-            // 分隔线
+            // 分隔线 + 折叠按钮
             Rectangle {
-                Layout.preferredWidth: 1
                 Layout.fillHeight: true
+                Layout.preferredWidth: window.leftPanelVisible ? 18 : 22
                 color: "lightgray"
+
+                // 点击分隔线任意位置切换折叠
+                TapHandler {
+                    onTapped: window.leftPanelVisible = !window.leftPanelVisible
+                }
+
+                // 折叠按钮（面板展开时显示）
+                Button {
+                    id: collapseBtn
+                    anchors.centerIn: parent
+                    width: 16
+                    height: 60
+                    flat: true
+                    z: 10
+                    visible: window.leftPanelVisible
+                    onClicked: window.leftPanelVisible = false
+                    contentItem: Label {
+                        text: "\u25C0"
+                        color: collapseBtn.hovered ? "limegreen" : "dimgray"
+                        font.pixelSize: 12
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: collapseBtn.hovered ? Qt.rgba(0, 0, 0, 0.08) : "transparent"
+                        radius: 4
+                    }
+                }
+
+                // 展开按钮（面板收起时显示）
+                Button {
+                    id: expandBtn
+                    anchors.centerIn: parent
+                    width: 20
+                    height: 80
+                    flat: true
+                    z: 10
+                    visible: !window.leftPanelVisible
+                    onClicked: window.leftPanelVisible = true
+                    contentItem: Label {
+                        text: "\u25B6"
+                        color: expandBtn.hovered ? "limegreen" : "dimgray"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: expandBtn.hovered ? Qt.rgba(0, 0, 0, 0.08) : "transparent"
+                        radius: 4
+                    }
+                }
             }
 
             // 右侧区域：歌词页面
@@ -481,7 +647,8 @@ ApplicationWindow {
         ControlBar {
             id: controlBar
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.max(48, window.height * 0.11)
+            // 全屏时控制栏加高，容纳放大的圆形封面
+            Layout.preferredHeight: Math.max(48, window.height * (window.isFullScreen ? 0.18 : 0.11))
         }
     }
 
@@ -507,33 +674,65 @@ ApplicationWindow {
 
     // ===== 对话框和弹窗 =====
 
-    // 文件选择对话框：选择本地音频文件（内置对话框支持多选）
-    function openFileDialog() {
-        var helper = Qt.createQmlObject("import MusicPlayer; FileDialogHelper {}", window);
-        var filter = qsTr("Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape);;All Files (*)");
-        var paths = helper.openFiles(qsTr("Select Audio File"), filter);
-        helper.destroy();
-        if (paths.length === 0) return;
-        for (var i = 0; i < paths.length; i++) {
-            var path = paths[i].toString()
-            if (!playlistModel.contains(path)) {
-                playlistModel.addFile(path)
-            }
+    // 文件选择对话框：选择本地音频文件（QML 原生对话框，支持多选）
+    property string fileDialogAction: "" // 对话框用途："addToQueue" 或 "importToPlaylist"
+
+    function toLocalPath(url) {
+        var path = url.toString()
+        if (path.startsWith("file://")) {
+            path = decodeURIComponent(path.slice("file://".length))
         }
-        if (window.currentIndex === -1 && playlistModel.count > 0) {
-            window.currentIndex = 0
-            player.playFile(playlistModel.filePath(0))
+        return path
+    }
+
+    FileDialog {
+        id: fileDialog
+        title: qsTr("Select Audio File")
+        fileMode: FileDialog.OpenFiles
+        nameFilters: [
+            qsTr("Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape)"),
+            qsTr("All Files (*)")
+        ]
+        onAccepted: {
+            if (fileDialogAction === "import") {
+                var count = 0
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    if (playlistManager.addSongToCurrentPlaylist(toLocalPath(selectedFiles[i]))) {
+                        count++
+                    }
+                }
+                if (count === 0 && selectedFiles.length > 0) {
+                    window.showToast(qsTr("所选歌曲已全部在歌单中"))
+                } else if (count === selectedFiles.length) {
+                    window.showToast(qsTr("已添加 %1 首歌曲").arg(count))
+                } else if (selectedFiles.length > count) {
+                    window.showToast(qsTr("已添加 %1 首，%2 首重复跳过").arg(count).arg(selectedFiles.length - count))
+                }
+            } else {
+                for (var j = 0; j < selectedFiles.length; j++) {
+                    var path = toLocalPath(selectedFiles[j])
+                    if (!playlistModel.contains(path)) {
+                        playlistModel.addFile(path)
+                    }
+                }
+                if (window.currentIndex === -1 && playlistModel.count > 0) {
+                    window.currentIndex = 0
+                    player.playFile(playlistModel.filePath(0))
+                }
+            }
         }
     }
 
+    function openFileDialog() {
+        fileDialogAction = "addToQueue"
+        fileDialog.title = qsTr("Select Audio File")
+        fileDialog.open()
+    }
+
     // 新建歌单对话框
-    Dialog {
+    ConfirmDialog {
         id: createPlaylistDialog
         title: qsTr("新建歌单")
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 320
         onOpened: { playlistNameInput.text = ""; window.isAnyPopupOpen = true }
         onClosed: window.isAnyPopupOpen = false
         onAccepted: {
@@ -557,6 +756,55 @@ ApplicationWindow {
                 onAccepted: createPlaylistDialog.accept()
             }
         }
+    }
+
+    // 重命名歌单对话框：修改歌单名称并持久化，歌单列表页与详情页共用
+    ConfirmDialog {
+        id: renamePlaylistDialog
+        title: qsTr("重命名歌单")
+
+        property int targetIndex: -1
+
+        onOpened: {
+            window.isAnyPopupOpen = true
+            renamePlaylistNameInput.forceActiveFocus()
+            renamePlaylistNameInput.selectAll()
+        }
+        onClosed: {
+            window.isAnyPopupOpen = false
+            targetIndex = -1
+        }
+        onAccepted: {
+            var newName = renamePlaylistNameInput.text.trim()
+            if (targetIndex >= 0 && newName.length > 0) {
+                playlistManager.renamePlaylist(targetIndex, newName)
+                window.showToast(qsTr("已重命名为「") + newName + qsTr("」"))
+            }
+            targetIndex = -1
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: qsTr("请输入新的歌单名称：")
+                color: "black"
+                font.pixelSize: 14
+            }
+            TextField {
+                id: renamePlaylistNameInput
+                Layout.fillWidth: true
+                placeholderText: qsTr("歌单名称")
+                maximumLength: 30
+                onAccepted: renamePlaylistDialog.accept()
+            }
+        }
+    }
+
+    // 打开重命名歌单对话框（预填原名称）
+    function openRenamePlaylistDialog(index, oldName) {
+        renamePlaylistDialog.targetIndex = index
+        renamePlaylistNameInput.text = oldName
+        renamePlaylistDialog.open()
     }
 
     // 添加到歌单弹窗：选择歌曲添加到指定歌单
@@ -819,26 +1067,27 @@ ApplicationWindow {
         }
     }
 
-    // 导入歌曲对话框：批量导入歌曲到歌单（内置对话框支持多选）
+    // 导入歌曲对话框：批量导入歌曲到歌单（QML 原生对话框，支持多选）
     function openImportFileDialog() {
-        var helper = Qt.createQmlObject("import MusicPlayer; FileDialogHelper {}", window);
-        var filter = qsTr("Audio Files (*.mp3 *.flac *.wav *.ogg *.aac *.ape);;All Files (*)");
-        var paths = helper.openFiles(qsTr("导入歌曲到歌单"), filter);
-        helper.destroy();
-        if (paths.length === 0) return;
-        var count = 0
-        for (var i = 0; i < paths.length; i++) {
-            var path = paths[i].toString()
-            if (playlistManager.addSongToCurrentPlaylist(path)) {
-                count++
+        fileDialogAction = "import"
+        fileDialog.title = qsTr("导入歌曲到歌单")
+        fileDialog.open()
+    }
+
+    // 播放列表悬停触发区域：鼠标移到右侧边缘时自动打开播放列表
+    Item {
+        anchors.right: parent.right
+        width: 10
+        height: parent.height - controlBar.height
+        z: 50
+
+        HoverHandler {
+            onHoveredChanged: {
+                if (hovered) {
+                    playlistSidebar.isOpen = true
+                    playlistSidebar.closeTimer.stop()
+                }
             }
-        }
-        if (count === 0 && paths.length > 0) {
-            window.showToast(qsTr("所选歌曲已全部在歌单中"))
-        } else if (count === paths.length) {
-            window.showToast(qsTr("已添加 %1 首歌曲").arg(count))
-        } else if (paths.length > count) {
-            window.showToast(qsTr("已添加 %1 首，%2 首重复跳过").arg(count).arg(paths.length - count))
         }
     }
 

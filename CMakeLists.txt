@@ -54,8 +54,8 @@ qt_add_qml_module(MusicPlayer
         src/song_searcher.cpp
         src/search_result_model.h
         src/search_result_model.cpp
-        src/file_dialog_helper.h
-        src/file_dialog_helper.cpp
+        src/net_image_provider.h
+        src/net_image_provider.cpp
     QML_FILES
         Main.qml
         qml/pages/PlaylistsPage.qml
@@ -64,6 +64,7 @@ qt_add_qml_module(MusicPlayer
         qml/pages/SearchPage.qml
         qml/components/ControlBar.qml
         qml/components/PlaylistSidebar.qml
+        qml/components/ConfirmDialog.qml
     RESOURCES
         resources/icons/add.svg
         resources/icons/shuffle.svg
@@ -73,6 +74,7 @@ qt_add_qml_module(MusicPlayer
         resources/icons/volume-mute.svg
         resources/icons/playlist.svg
         resources/icons/musicplayer_256.png
+        RESOURCES 开发文档/开发文档2.md
 )
 
 target_include_directories(MusicPlayer PRIVATE
