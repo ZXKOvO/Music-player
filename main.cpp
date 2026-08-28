@@ -17,12 +17,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("MusicPlayer");
     QNetworkProxyFactory::setUseSystemConfiguration(false);
     app.setWindowIcon(QIcon(":/qt/qml/MusicPlayer/resources/icons/musicplayer_256.png"));
-    qmlRegisterType<PlaylistManager>("MusicPlayer", 1, 0, "PlaylistManager");
-    qmlRegisterType<PlayerController>("MusicPlayer", 1, 0, "PlayerController");
-    qmlRegisterType<PlaylistModel>("MusicPlayer", 1, 0, "PlaylistModel");
-    qmlRegisterType<LyricsParser>("MusicPlayer", 1, 0, "LyricsParser");
-    qmlRegisterType<SongSearcher>("MusicPlayer", 1, 0, "SongSearcher");
-    qmlRegisterType<SearchResultModel>("MusicPlayer", 1, 0, "SearchResultModel");
+
     QQmlApplicationEngine engine;
     NetImageProvider *netImgProvider = new NetImageProvider;
     engine.addImageProvider("net", netImgProvider);
