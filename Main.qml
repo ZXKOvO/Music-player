@@ -103,7 +103,7 @@ ApplicationWindow {
         Window {
             id: desktopLyricsWindow
             width: 500
-            height: 100
+            height: 120
             visible: true
             title: qsTr("桌面歌词")
             color: "transparent"
@@ -120,6 +120,7 @@ ApplicationWindow {
             property var colorList: ["green", "cyan", "yellow", "orange", "deeppink", "purple", "white"]
 
             Rectangle {
+                id: desktopLyricsBg
                 anchors.fill: parent
                 color: Qt.rgba(0.1, 0.1, 0.1, 0.8)
                 radius: 10
@@ -267,6 +268,78 @@ ApplicationWindow {
                         }
                     }
 
+                    // 进度条：显示当前播放进度，支持拖动
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 16
+                        Layout.leftMargin: 12
+                        Layout.rightMargin: 12
+                        spacing: 6
+
+                        Label {
+                            id: desktopCurrentTimeLabel
+                            text: {
+                                var pos = desktopProgressSlider.pressed ? desktopProgressSlider.value : player.position
+                                if (!isFinite(pos) || pos < 0) return "0:00"
+                                var m = Math.floor(pos / 60)
+                                var s = Math.floor(pos % 60)
+                                return m + ":" + (s < 10 ? "0" : "") + s
+                            }
+                            color: "lightgray"
+                            font.pixelSize: 9
+                            Layout.preferredWidth: 28
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        Slider {
+                            id: desktopProgressSlider
+                            Layout.fillWidth: true
+                            from: 0
+                            to: player.duration || 1
+                            value: pressed ? value : player.position
+                            enabled: player.title !== ""
+                            onMoved: player.seek(value)
+                            background: Rectangle {
+                                x: desktopProgressSlider.leftPadding
+                                y: desktopProgressSlider.topPadding + desktopProgressSlider.availableHeight / 2 - height / 2
+                                implicitHeight: 2
+                                width: desktopProgressSlider.availableWidth
+                                height: implicitHeight
+                                radius: 1
+                                color: "gray"
+
+                                Rectangle {
+                                    width: desktopProgressSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    color: "limegreen"
+                                    radius: 1
+                                }
+                            }
+                            handle: Rectangle {
+                                x: desktopProgressSlider.leftPadding + desktopProgressSlider.visualPosition * (desktopProgressSlider.availableWidth - width)
+                                y: desktopProgressSlider.topPadding + desktopProgressSlider.availableHeight / 2 - height / 2
+                                implicitWidth: 8
+                                implicitHeight: 8
+                                radius: 4
+                                color: desktopProgressSlider.pressed ? "limegreen" : "white"
+                            }
+                        }
+
+                        Label {
+                            id: desktopDurationLabel
+                            text: {
+                                var dur = player.duration
+                                if (!isFinite(dur) || dur < 0) return "0:00"
+                                var m = Math.floor(dur / 60)
+                                var s = Math.floor(dur % 60)
+                                return m + ":" + (s < 10 ? "0" : "") + s
+                            }
+                            color: "lightgray"
+                            font.pixelSize: 9
+                            Layout.preferredWidth: 28
+                        }
+                    }
+
                     // 分割线
                     Rectangle {
                         Layout.fillWidth: true
@@ -343,13 +416,13 @@ ApplicationWindow {
                         }
                     }
                 }
-            }
 
-            TapHandler {
-                acceptedButtons: Qt.LeftButton
-                onPressedChanged: {
-                    if (pressed) {
-                        player.startWindowSystemMove(desktopLyricsWindow)
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onPressedChanged: {
+                        if (pressed) {
+                            player.startWindowSystemMove(desktopLyricsWindow)
+                        }
                     }
                 }
             }
