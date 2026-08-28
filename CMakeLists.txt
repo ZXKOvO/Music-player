@@ -74,6 +74,7 @@ qt_add_qml_module(MusicPlayer
         resources/icons/volume-mute.svg
         resources/icons/playlist.svg
         resources/icons/musicplayer_256.png
+        RESOURCES 开发文档/开发文档2.md
 )
 
 target_include_directories(MusicPlayer PRIVATE
