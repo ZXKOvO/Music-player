@@ -13,10 +13,10 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    QCoreApplication::setOrganizationName("MusicPlayer");
-    QCoreApplication::setApplicationName("MusicPlayer");
+    QCoreApplication::setOrganizationName("FengLing");
+    QCoreApplication::setApplicationName("FengLing");
     QNetworkProxyFactory::setUseSystemConfiguration(false);
-    app.setWindowIcon(QIcon(":/qt/qml/MusicPlayer/resources/icons/musicplayer_256.png"));
+    app.setWindowIcon(QIcon(":/qt/qml/FengLing/resources/icons/musicplayer_256.png"));
 
     QQmlApplicationEngine engine;
     NetImageProvider *netImgProvider = new NetImageProvider;
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-    engine.loadFromModule("MusicPlayer", "Main");
+    engine.loadFromModule("FengLing", "Main");
 
     return app.exec();
 }

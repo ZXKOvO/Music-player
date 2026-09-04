@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(MusicPlayer VERSION 0.1 LANGUAGES CXX)
+project(FengLing VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,9 +24,9 @@ pkg_check_modules(AV REQUIRED IMPORTED_TARGET
 pkg_check_modules(SDL2 REQUIRED sdl2)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-qt_add_executable(MusicPlayer  WIN32)
-qt_add_qml_module(MusicPlayer
-    URI MusicPlayer
+qt_add_executable(FengLing  WIN32)
+qt_add_qml_module(FengLing
+    URI FengLing
     VERSION 1.0
     SOURCES
         main.cpp
@@ -77,23 +77,23 @@ qt_add_qml_module(MusicPlayer
         RESOURCES 开发文档/开发文档2.md
 )
 
-target_include_directories(MusicPlayer PRIVATE
+target_include_directories(FengLing PRIVATE
     src/
     ${SDL2_INCLUDE_DIRS}
 )
 
-target_link_libraries(MusicPlayer
+target_link_libraries(FengLing
     PRIVATE Qt6::Quick Qt6::Network Qt6::Qml Qt6::Widgets
     PkgConfig::AV
     ${SDL2_LIBRARIES}
 )
 
-target_compile_options(MusicPlayer PRIVATE
+target_compile_options(FengLing PRIVATE
     ${SDL2_CFLAGS_OTHER}
 )
 
 set(CMAKE_INSTALL_PREFIX "/opt/${PROJECT_NAME}" CACHE PATH "Install path prefix" FORCE)
-install(TARGETS MusicPlayer
+install(TARGETS FengLing
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

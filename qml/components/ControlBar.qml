@@ -360,9 +360,9 @@ Rectangle {
                     contentItem: Item {
                         Image {
                             anchors.centerIn: parent
-                            source: playlistModel.playMode === 0 ? "qrc:/qt/qml/MusicPlayer/resources/icons/repeat.svg"
-                                    : playlistModel.playMode === 1 ? "qrc:/qt/qml/MusicPlayer/resources/icons/repeat-one.svg"
-                                    : "qrc:/qt/qml/MusicPlayer/resources/icons/shuffle.svg"
+                            source: playlistModel.playMode === 0 ? "qrc:/qt/qml/FengLing/resources/icons/repeat.svg"
+                                    : playlistModel.playMode === 1 ? "qrc:/qt/qml/FengLing/resources/icons/repeat-one.svg"
+                                    : "qrc:/qt/qml/FengLing/resources/icons/shuffle.svg"
                             sourceSize.width: 16
                             sourceSize.height: 16
                         }
@@ -407,7 +407,7 @@ Rectangle {
                     contentItem: Item {
                         Image {
                             anchors.centerIn: parent
-                            source: "qrc:/qt/qml/MusicPlayer/resources/icons/add.svg"
+                            source: "qrc:/qt/qml/FengLing/resources/icons/add.svg"
                             sourceSize.width: 14
                             sourceSize.height: 14
                         }
@@ -438,8 +438,8 @@ Rectangle {
                     contentItem: Item {
                         Image {
                             anchors.centerIn: parent
-                            source: player.muted ? "qrc:/qt/qml/MusicPlayer/resources/icons/volume-mute.svg"
-                                                 : "qrc:/qt/qml/MusicPlayer/resources/icons/volume.svg"
+                            source: player.muted ? "qrc:/qt/qml/FengLing/resources/icons/volume-mute.svg"
+                                                 : "qrc:/qt/qml/FengLing/resources/icons/volume.svg"
                             sourceSize.width: 12
                             sourceSize.height: 12
                         }
@@ -502,7 +502,7 @@ Rectangle {
                 contentItem: Item {
                     Image {
                         anchors.centerIn: parent
-                        source: "qrc:/qt/qml/MusicPlayer/resources/icons/playlist.svg"
+                        source: "qrc:/qt/qml/FengLing/resources/icons/playlist.svg"
                         sourceSize.width: 16
                         sourceSize.height: 16
                     }

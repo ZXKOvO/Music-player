@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtQuick.Window
 import Qt.labs.settings
-import MusicPlayer
+import FengLing
 
 // 主窗口：应用入口，管理全局状态和页面切换
 ApplicationWindow {
@@ -12,7 +12,7 @@ ApplicationWindow {
     width: 1000
     height: 500
     visible: true
-    title: qsTr("Music Player")
+    title: qsTr("FengLing")
     color: "black"
 
     // 主窗口关闭即退出程序
