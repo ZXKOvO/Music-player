@@ -12,7 +12,7 @@ find_package(PkgConfig REQUIRED)
 qt_standard_project_setup(REQUIRES 6.9)
 
 # 第三方依赖：FFmpeg（含 avfilter 用于 atempo 变速不变调）
-pkg_check_modules(AV REQUIRED
+pkg_check_modules(AV REQUIRED IMPORTED_TARGET
     libavcodec
     libavformat
     libavutil
@@ -79,18 +79,16 @@ qt_add_qml_module(MusicPlayer
 
 target_include_directories(MusicPlayer PRIVATE
     src/
-    ${AV_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
 )
 
 target_link_libraries(MusicPlayer
     PRIVATE Qt6::Quick Qt6::Network Qt6::Qml Qt6::Widgets
-    ${AV_LIBRARIES}
+    PkgConfig::AV
     ${SDL2_LIBRARIES}
 )
 
 target_compile_options(MusicPlayer PRIVATE
-    ${AV_CFLAGS_OTHER}
     ${SDL2_CFLAGS_OTHER}
 )
 

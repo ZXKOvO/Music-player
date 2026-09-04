@@ -93,11 +93,8 @@ bool SpeedSwitch::buildFilter(double speed)
     }
 
     // 强制 sink 输出 packed float32，避免 atempo 输出 planar 导致数据错位
-    int sampleFmts[] = {static_cast<int>(AV_SAMPLE_FMT_FLT), static_cast<int>(AV_SAMPLE_FMT_NONE)};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-    av_opt_set_int_list(sinkCtx_, "sample_fmts", sampleFmts, AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
-#pragma GCC diagnostic pop
+    int sampleFmt = static_cast<int>(AV_SAMPLE_FMT_FLT);
+    av_opt_set_array(sinkCtx_, "sample_fmts", AV_OPT_SEARCH_CHILDREN, 0, 1, AV_OPT_TYPE_INT, &sampleFmt);
 
     AVFilterInOut *outputs = avfilter_inout_alloc();
     AVFilterInOut *inputs = avfilter_inout_alloc();
